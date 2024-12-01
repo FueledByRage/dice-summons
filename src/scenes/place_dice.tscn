@@ -1,0 +1,28 @@
+[gd_scene load_steps=5 format=4 uid="uid://bnivs1ei5sg4j"]
+
+[ext_resource type="Texture2D" uid="uid://dqnmmhxsckbk7" path="res://assets/table/sprites/Sprite-0003-Sheet.png" id="1_62ryd"]
+[ext_resource type="Script" path="res://src/scripts/tile_dice.gd" id="2_mb5or"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ugcpr"]
+texture = ExtResource("1_62ryd")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+1:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_pm1c2"]
+tile_size = Vector2i(32, 32)
+physics_layer_0/collision_layer = 4
+sources/0 = SubResource("TileSetAtlasSource_ugcpr")
+
+[node name="place-dice" type="Node2D"]
+
+[node name="TileMap" type="TileMapLayer" parent="."]
+position = Vector2(-48, -80)
+tile_map_data = PackedByteArray("AAABAAIAAAABAAAAAAABAAEAAAABAAAAAAABAAMAAAABAAAAAAACAAIAAAABAAAAAAAAAAIAAAABAAAAAAABAAAAAAABAAAAAAA=")
+tile_set = SubResource("TileSet_pm1c2")
+script = ExtResource("2_mb5or")
+
+[node name="center" type="Marker2D" parent="."]
+position = Vector2(48, 80)

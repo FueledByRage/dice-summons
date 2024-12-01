@@ -1,0 +1,28 @@
+[gd_scene load_steps=6 format=4 uid="uid://ca6t287ciu01h"]
+
+[ext_resource type="Texture2D" uid="uid://dqnmmhxsckbk7" path="res://assets/table/sprites/Sprite-0003-Sheet.png" id="1_1djv5"]
+[ext_resource type="Script" path="res://src/scripts/dice.gd" id="2_coo5p"]
+[ext_resource type="Script" path="res://src/scripts/dice_tile.gd" id="3_wiaxf"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_gluvf"]
+texture = ExtResource("1_1djv5")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+1:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_dbnvo"]
+tile_size = Vector2i(32, 32)
+sources/0 = SubResource("TileSetAtlasSource_gluvf")
+
+[node name="dice" type="Node2D"]
+script = ExtResource("2_coo5p")
+
+[node name="tile" type="TileMapLayer" parent="."]
+position = Vector2(-48, -79)
+tile_map_data = PackedByteArray("AAABAAIAAAABAAEAAAABAAEAAAABAAEAAAABAAAAAAABAAEAAAABAAMAAAABAAEAAAACAAIAAAABAAEAAAAAAAIAAAABAAEAAAA=")
+tile_set = SubResource("TileSet_dbnvo")
+script = ExtResource("3_wiaxf")
+
+[node name="spawner" type="Marker2D" parent="."]
