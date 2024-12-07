@@ -15,38 +15,71 @@ var summons_map = [];
 
 var possible_move_cells = [];
 
+var selected_summon_index = 0;
+
+enum States { ATTACKING, PLACING, IDLE }
+
+var state = States.IDLE;
+
 func _ready() -> void:
 	add_to_group('table');
 	set_table();
 
 func _process(delta: float) -> void:
+		match state:
+			States.ATTACKING:
+				pass
+			States.PLACING:
+				set_selected_tile();
+				placing_dice.global_position = selected_tile;
 		if(placing):
 			set_selected_tile();
 			placing_dice.global_position = selected_tile;
-			if(Input.is_action_just_pressed("place")):
-				place();
-				pass
-		else:
-			if(Input.is_action_pressed("placing")):
-				to_placing();
-		if(Input.is_action_just_pressed("move") && !moving):
-			display_possible_paths();
-			moving = true;
 
 func _input(event: InputEvent) -> void:
+	if(event.is_action_pressed("place") && placing):
+		place();
 	if(event.is_action("left_click") && moving):
+		var original_mouse_position = get_local_mouse_position();
 		var mouse_position = local_to_map(get_local_mouse_position());
+		
 		if(mouse_position in possible_move_cells):
-			var summon = summons_map[0];
-			summon.node.global_position = map_to_local(mouse_position);
-			moving = false;
-func set_table() -> void:
-	for column in WIDTH:
-		for row in HEIGHT:
-			var tile = Vector2(column, row);
-			var tileRect = Vector2i(0,1);
+			var summon = summons_map[0].node;
+			var newPosition = map_to_local(mouse_position);
 			
-			set_cell(tile, 0, tileRect, 0);
+			summon.position = newPosition;
+			moving = false;
+			
+			for cell in possible_move_cells:
+				var cell_coord = local_to_map(to_global(cell));
+				var dice_face = Vector2i(1,1);
+				set_cell(cell, 0, dice_face, 0);
+	elif(event.is_action_pressed("move") && !moving):
+		var summon = summons_map[selected_summon_index];
+		possible_move_cells = get_possible_moves(summon.local, 3);
+		display_possible_paths(possible_move_cells);
+		moving = true;
+	elif(event.is_action_pressed('attack')):
+		pass
+	elif(event.is_action_pressed("placing")):
+		to_placing();
+	elif(event.is_action_pressed('move_right')):
+		if(selected_summon_index >= summons_map.size()):
+			selected_summon_index = 0;
+			pass
+		selected_summon_index += 1
+	elif(event.is_action_pressed("move_left") and selected_summon_index != 0):
+		selected_summon_index -= 1
+
+
+func is_within_bounds(tile: Vector2) -> bool:
+	return tile.x >= 0 and tile.x < WIDTH and tile.y >= 0 and tile.y < HEIGHT
+
+func set_table() -> void:
+	for column in range(WIDTH):
+		for row in range(HEIGHT):
+			if(is_within_bounds(Vector2i(column, row))):
+				set_cell(Vector2(column, row), 0, Vector2i(0, 1), 0)
 
 func set_selected_tile() -> void:
 	var tile = local_to_map(get_global_mouse_position());
@@ -60,7 +93,7 @@ func to_placing():
 	
 	placing_dice = placing_dice_instance;
 	
-	placing = true;
+	state = States.PLACING;
 
 func place():
 	var dice_scene = preload("res://src/scenes/dice.tscn");
@@ -81,7 +114,7 @@ func place_dice(cells_coords):
 
 func build_dice(dice_center: Vector2):
 	var dice_face = Vector2i(1,1);
-
+	
 	var form = [
 		Vector2(0,0),
 		Vector2(0, -1),
@@ -115,12 +148,10 @@ func add_summon_to_path(summon):
 		"local": to_local(summon.global_position),
 	});
 
-func display_possible_paths():
-	var summon = summons_map[0];
-	possible_move_cells = get_possible_moves(summon.local, 3);
-	
+func display_possible_paths(possible_move_cells):
 	for cell in possible_move_cells:
 		set_cell(cell, 0, Vector2(0,0),0);
+
 
 func get_possible_moves(summon_position: Vector2, move_range: int) -> Array:
 	var possible_moves = [];
@@ -147,6 +178,6 @@ func get_possible_moves(summon_position: Vector2, move_range: int) -> Array:
 			];
 			
 			for neighbor in neighbors:
-				if neighbor in path and neighbor not in visited:
+				if is_within_bounds(neighbor) and neighbor in path and neighbor not in visited:
 					queue.append({ "tile": neighbor, "distance": current_distance + 1 })
 	return possible_moves
