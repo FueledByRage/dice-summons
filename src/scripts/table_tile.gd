@@ -6,18 +6,17 @@ var HEIGHT = 20;
 var maped_table : Dictionary = {};
 
 var selected_tile;
-var placing = false;
-var moving = false;
 var placing_dice;
 
 var path = [];
 var summons_map = [];
+var select_targets =[];
 
 var possible_move_cells = [];
 
-var selected_summon_index = 0;
+var selected_target_index = 0;
 
-enum States { ATTACKING, PLACING, IDLE }
+enum States { ATTACKING, PLACING, IDLE, SELECTING, MOVING }
 
 var state = States.IDLE;
 
@@ -32,14 +31,11 @@ func _process(delta: float) -> void:
 			States.PLACING:
 				set_selected_tile();
 				placing_dice.global_position = selected_tile;
-		if(placing):
-			set_selected_tile();
-			placing_dice.global_position = selected_tile;
 
 func _input(event: InputEvent) -> void:
-	if(event.is_action_pressed("place") && placing):
+	if(event.is_action_pressed("place") && state == States.PLACING):
 		place();
-	if(event.is_action("left_click") && moving):
+	if(event.is_action("left_click") && state == States.MOVING):
 		var original_mouse_position = get_local_mouse_position();
 		var mouse_position = local_to_map(get_local_mouse_position());
 		
@@ -48,29 +44,43 @@ func _input(event: InputEvent) -> void:
 			var newPosition = map_to_local(mouse_position);
 			
 			summon.position = newPosition;
-			moving = false;
+			state = States.IDLE;
 			
 			for cell in possible_move_cells:
 				var cell_coord = local_to_map(to_global(cell));
 				var dice_face = Vector2i(1,1);
 				set_cell(cell, 0, dice_face, 0);
-	elif(event.is_action_pressed("move") && !moving):
-		var summon = summons_map[selected_summon_index];
-		possible_move_cells = get_possible_moves(summon.local, 3);
-		display_possible_paths(possible_move_cells);
-		moving = true;
-	elif(event.is_action_pressed('attack')):
-		pass
-	elif(event.is_action_pressed("placing")):
+	#elif(event.is_action_pressed("move") && state == ):
+		#var summon = summons_map[selected_target_index];
+		#possible_move_cells = get_possible_moves(summon.local, 3);
+		#display_possible_paths(possible_move_cells);
+		#moving = true;
+	elif(event.is_action_pressed("placing") and state == States.IDLE):
 		to_placing();
-	elif(event.is_action_pressed('move_right')):
-		if(selected_summon_index >= summons_map.size()):
-			selected_summon_index = 0;
+	if(States.ATTACKING || States.SELECTING):
+		if(event.is_action_pressed('move_right')):
+			if(selected_target_index >= select_targets.size()):
+				selected_target_index = 0;
+				pass
+			selected_target_index += 1
+		elif(event.is_action_pressed("move_left") and selected_target_index != 0):
+			selected_target_index -= 1
+		elif(event.is_action_pressed('confirm')):
+			on_confirm();
 			pass
-		selected_summon_index += 1
-	elif(event.is_action_pressed("move_left") and selected_summon_index != 0):
-		selected_summon_index -= 1
 
+func on_confirm():
+	var selected = select_targets[selected_target_index];
+	if(state == States.SELECTING):
+		display_summon_options(selected.node);
+		select_targets = selected.node;
+		state = States.ATTACKING;
+	if(state == States.ATTACKING):
+		print('executing ' + selected.name)
+		pass
+
+func display_summon_options(summon):
+	print(summon.spells);
 
 func is_within_bounds(tile: Vector2) -> bool:
 	return tile.x >= 0 and tile.x < WIDTH and tile.y >= 0 and tile.y < HEIGHT
@@ -103,7 +113,7 @@ func place():
 	build_dice(selected_tile);
 	summon();
 	
-	placing = false;
+	state = States.IDLE;
 
 func place_dice(cells_coords):
 	var dice_face = Vector2i(1,1);
@@ -151,7 +161,6 @@ func add_summon_to_path(summon):
 func display_possible_paths(possible_move_cells):
 	for cell in possible_move_cells:
 		set_cell(cell, 0, Vector2(0,0),0);
-
 
 func get_possible_moves(summon_position: Vector2, move_range: int) -> Array:
 	var possible_moves = [];
