@@ -1,6 +1,7 @@
-[gd_scene load_steps=5 format=4 uid="uid://bnivs1ei5sg4j"]
+[gd_scene load_steps=6 format=4 uid="uid://bnivs1ei5sg4j"]
 
 [ext_resource type="Texture2D" uid="uid://dqnmmhxsckbk7" path="res://assets/table/sprites/Sprite-0003-Sheet.png" id="1_62ryd"]
+[ext_resource type="Script" path="res://src/scripts/place_dice.gd" id="1_bj0af"]
 [ext_resource type="Script" path="res://src/scripts/tile_dice.gd" id="2_mb5or"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ugcpr"]
@@ -17,6 +18,7 @@ physics_layer_0/collision_layer = 4
 sources/0 = SubResource("TileSetAtlasSource_ugcpr")
 
 [node name="place-dice" type="Node2D"]
+script = ExtResource("1_bj0af")
 
 [node name="TileMap" type="TileMapLayer" parent="."]
 position = Vector2(-48, -80)
