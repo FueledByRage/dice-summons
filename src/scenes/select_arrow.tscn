@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3 uid="uid://c3oqkp7ix2x5r"]
+
+[ext_resource type="Script" path="res://src/scripts/select_arrow.gd" id="1_b2mqt"]
+[ext_resource type="Texture2D" uid="uid://d2cnkfluyma0r" path="res://assets/elements/select_arrow.png" id="2_14mu0"]
+
+[node name="select_arrow" type="Node2D"]
+z_index = 3
+script = ExtResource("1_b2mqt")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_14mu0")

@@ -69,7 +69,9 @@ func add_summon_to_path(summon):
 	summons_map.append({
 		"node": summon,
 		"name": summon.name,
+		"label": summon.name, 
 		"local": to_local(summon.global_position),
+		"global_local": summon.global_position
 	})
 
 func highlight_possible_moves(possible_move_cells):

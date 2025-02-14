@@ -38,3 +38,5 @@ script = ExtResource("2_wtxc0")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(604, 490)
+
+[node name="UI" type="CanvasLayer" parent="."]
