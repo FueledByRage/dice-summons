@@ -5,6 +5,8 @@ var HEIGHT = 20
 
 var maped_table: Dictionary = {}
 
+@onready var units = get_parent().get_node("Units");
+
 var placing_dice
 var path = []
 var summons_map = []
@@ -66,7 +68,7 @@ func summon(position):
 	add_summon_to_path(summon_instance)
 
 func add_summon_to_path(summon):
-	summons_map.append({
+	units.allies_units.append({
 		"node": summon,
 		"name": summon.name,
 		"label": summon.name, 
