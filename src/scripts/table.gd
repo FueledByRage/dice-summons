@@ -1,7 +1,8 @@
 extends Node
 
-enum States { ATTACKING, PLACING, IDLE, SELECTING, MOVING }
+signal select
 
+enum States { ATTACKING, PLACING, IDLE, SELECTING, MOVING }
 var state = States.IDLE
 
 @onready var tile_map_layer = $TileMap;
@@ -9,6 +10,8 @@ var state = States.IDLE
 
 var targets = [];
 var select_target_index = 0;
+
+var casted_spell
 
 func _input(event: InputEvent) -> void:
 	match state:
@@ -42,14 +45,18 @@ func _input(event: InputEvent) -> void:
 				move_arrow_to_on_focus();
 			elif event.is_action_pressed("confirm"):
 				on_confirm()
+		States.ATTACKING:
+			if event.is_action_pressed("confirm"):
+				on_confirm();
 
 func on_confirm():
 	var selected = targets[select_target_index]
-	$select_arrow.queue_free();
+	$Select_arrow.queue_free();
 	if state == States.SELECTING:
 		display_summon_options(selected.node)
 		state = States.ATTACKING
 	elif state == States.ATTACKING:
+		select.emit(selected);
 		print("executing " + selected.name)
 
 func _to_selecting():
@@ -59,8 +66,18 @@ func _to_selecting():
 		display_target_on_focus();
 
 func _to_atacking(targets):
+	$Menu.queue_free();
 	state = States.ATTACKING;
+	select.connect(execute_spell)
 	display_target_on_focus();
+
+func _to_moving():
+	targets = units.allies_units;
+	select.connect(select_move)
+	state = States.MOVING
+
+func select_move(selected_summon):
+	print(selected_summon);
 
 func _to_idle():
 	state = States.IDLE
@@ -69,13 +86,14 @@ func display_target_on_focus():
 	var on_focus = targets[select_target_index];
 	var select_arrow = preload('res://src/scenes/select_arrow.tscn').instantiate();
 	var on_focus_position_arrow_position = on_focus.global_local + Vector2(0, -15);
+	
 	select_arrow.global_position = on_focus_position_arrow_position;
 	
 	add_child(select_arrow);
 
 func move_arrow_to_on_focus():
 	var on_focus = targets[select_target_index];
-	var select_arrow = $select_arrow;
+	var select_arrow = $Select_arrow;
 	var on_focus_position_arrow_position = on_focus.global_local + Vector2(0, -15);
 	select_arrow.global_position = on_focus_position_arrow_position;
 
@@ -83,13 +101,14 @@ func display_summon_options(summon):
 	var menu = preload("res://src/scenes/menu.tscn").instantiate();
 	
 	menu.global_position = summon.global_position + Vector2(5, -5);
-	menu.add_options("Speels", summon.spells);
+	menu.add_options("Speels", summon.spells, cast);
 	add_child(menu);
 
 func on_select_menu_option(option):
 	pass
 
 func cast(spell):
+	casted_spell = spell;
 	var targets 
 	if(spell.target_type == "all"):
 		targets = units.get_all_units();
@@ -104,5 +123,12 @@ func cast(spell):
 		pass
 	_to_atacking(targets);
 
-func execute_spell(spell, target):
+func _on_select_spell_target(target):
+	$Select_arrow.queue_free();
+	execute_spell(target);
+	_to_idle();
+
+func execute_spell(target):
+	target.node.apply_change_on_life(casted_spell.life_effect);
+	casted_spell = null;
 	pass;

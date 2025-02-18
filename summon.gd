@@ -14,6 +14,7 @@ func _ready() -> void:
 
 func apply_change_on_life(change):
 	CURRENT_LIFE += change;
+	update_life_label();
 
 func update_life_label():
 	var label: Label = $Control/Label

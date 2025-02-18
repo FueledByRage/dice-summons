@@ -76,6 +76,12 @@ func add_summon_to_path(summon):
 		"global_local": summon.global_position
 	})
 
+func highlight_summon_possible_moves(summon_position):
+	pass
+
+func calculate_possible_moves(position):
+	pass
+
 func highlight_possible_moves(possible_move_cells):
 	for cell in possible_move_cells:
 		set_cell(cell, 0, Vector2(0,0), 0)
@@ -91,3 +97,18 @@ func to_placing():
 	add_child(placing_dice_instance);
 	
 	placing_dice = placing_dice_instance;
+
+
+func calculate_moves_in_direction(current_tile: Vector2, moves : int, direction: Vector2):
+	var path = [];
+	var next_tile = current_tile + direction;
+	
+	while is_tile_a_path(next_tile) && moves > 0:
+		path.append(next_tile);
+		moves -= 1
+		next_tile += direction;
+	
+	return path;
+
+func is_tile_a_path(tile_coord):
+	return !is_within_bounds(tile_coord) && get_cell_atlas_coords(tile_coord) == Vector2i(1,1)
