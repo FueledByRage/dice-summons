@@ -20,7 +20,8 @@ func _input(event: InputEvent) -> void:
 				tile_map_layer.place()
 				_to_idle();
 		States.MOVING:
-			if event.is_action("left_click"):
+			if event.is_action("confirm"):
+				on_confirm();
 				#var mouse_position = tile_map_layer.local_to_map(tile_map_layer.get_local_mouse_position())
 				#if mouse_position in tile_map_layer.possible_move_cells:
 					#var summon = units.summons_map[0].node
@@ -33,6 +34,8 @@ func _input(event: InputEvent) -> void:
 				tile_map_layer.to_placing();
 			if event.is_action_pressed('select'):
 				_to_selecting();
+			if event.is_action_pressed("move"):
+				_to_moving();
 		States.SELECTING:
 			if event.is_action_pressed("move_right"):
 				if select_target_index + 1 >= targets.size():
@@ -51,13 +54,16 @@ func _input(event: InputEvent) -> void:
 
 func on_confirm():
 	var selected = targets[select_target_index]
-	$Select_arrow.queue_free();
+	var arrow = $Select_arrow;
+	if arrow != null:
+		arrow.queue_free();
 	if state == States.SELECTING:
 		display_summon_options(selected.node)
 		state = States.ATTACKING
 	elif state == States.ATTACKING:
 		select.emit(selected);
-		print("executing " + selected.name)
+		return
+	select.emit(selected);
 
 func _to_selecting():
 	targets = units.allies_units;
@@ -73,11 +79,12 @@ func _to_atacking(targets):
 
 func _to_moving():
 	targets = units.allies_units;
-	select.connect(select_move)
-	state = States.MOVING
+	select.connect(select_move);
+	display_target_on_focus();
+	state = States.MOVING;
 
 func select_move(selected_summon):
-	print(selected_summon);
+	tile_map_layer.highlight_summon_possible_moves(selected_summon.local);
 
 func _to_idle():
 	state = States.IDLE
@@ -123,12 +130,8 @@ func cast(spell):
 		pass
 	_to_atacking(targets);
 
-func _on_select_spell_target(target):
-	$Select_arrow.queue_free();
-	execute_spell(target);
-	_to_idle();
-
 func execute_spell(target):
 	target.node.apply_change_on_life(casted_spell.life_effect);
 	casted_spell = null;
+	_to_idle()
 	pass;
