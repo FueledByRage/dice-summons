@@ -2,16 +2,18 @@ extends Node
 
 signal select
 
-enum States { ATTACKING, PLACING, IDLE, SELECTING, MOVING }
+enum States { ATTACKING, PLACING, IDLE, SELECTING, MOVING, ON_MOVING }
 var state = States.IDLE
 
 @onready var tile_map_layer = $TileMap;
 @onready var units = $Units;
+@onready var select_arrow = $Select_arrow;
 
 var targets = [];
 var select_target_index = 0;
 
 var casted_spell
+var summon_on_move
 
 func _input(event: InputEvent) -> void:
 	match state:
@@ -20,14 +22,8 @@ func _input(event: InputEvent) -> void:
 				tile_map_layer.place()
 				_to_idle();
 		States.MOVING:
-			if event.is_action("confirm"):
+			if event.is_action_released("confirm"):
 				on_confirm();
-				#var mouse_position = tile_map_layer.local_to_map(tile_map_layer.get_local_mouse_position())
-				#if mouse_position in tile_map_layer.possible_move_cells:
-					#var summon = units.summons_map[0].node
-					#tile_map_layer.move_summon(summon, mouse_position)
-					#state = States.IDLE
-				pass
 		States.IDLE:
 			if event.is_action_pressed("placing"):
 				state = States.PLACING
@@ -51,12 +47,22 @@ func _input(event: InputEvent) -> void:
 		States.ATTACKING:
 			if event.is_action_pressed("confirm"):
 				on_confirm();
+		States.ON_MOVING:
+			if event.is_action_pressed("move_right"):
+				if select_target_index + 1 >= targets.size():
+					select_target_index = 0
+				else:
+					select_target_index += 1
+				move_arrow_to_tile_on_focus();
+			elif event.is_action_pressed("move_left") and select_target_index != 0:
+				select_target_index -= 1
+				move_arrow_to_tile_on_focus();
+			elif event.is_action_pressed("confirm"):
+				select.emit();
 
 func on_confirm():
 	var selected = targets[select_target_index]
-	var arrow = $Select_arrow;
-	if arrow != null:
-		arrow.queue_free();
+	select_arrow.visible = false;
 	if state == States.SELECTING:
 		display_summon_options(selected.node)
 		state = States.ATTACKING
@@ -74,34 +80,55 @@ func _to_selecting():
 func _to_atacking(targets):
 	$Menu.queue_free();
 	state = States.ATTACKING;
-	select.connect(execute_spell)
+	select.connect(execute_spell, 4)
 	display_target_on_focus();
 
 func _to_moving():
 	targets = units.allies_units;
-	select.connect(select_move);
+	select.connect(select_to_move, 4);
 	display_target_on_focus();
 	state = States.MOVING;
 
-func select_move(selected_summon):
-	tile_map_layer.highlight_summon_possible_moves(selected_summon.local);
+func select_to_move(selected_summon):
+	targets = tile_map_layer.move_summon(selected_summon);
+	display_tiles_on_focus();
+	select.connect(move_summon.bind(selected_summon), 4)
+	state = States.ON_MOVING;
+
+func move_summon(summon):
+	var selected_tile = targets[select_target_index];
+	summon.node.global_position = selected_tile;
+	tile_map_layer.reset_possible_moves();
+	select_arrow.visible = false;
+	_to_idle()
 
 func _to_idle():
 	state = States.IDLE
 
 func display_target_on_focus():
 	var on_focus = targets[select_target_index];
-	var select_arrow = preload('res://src/scenes/select_arrow.tscn').instantiate();
 	var on_focus_position_arrow_position = on_focus.global_local + Vector2(0, -15);
 	
 	select_arrow.global_position = on_focus_position_arrow_position;
 	
-	add_child(select_arrow);
+	select_arrow.visible = true;
+
+func display_tiles_on_focus():
+	var on_focus = targets[select_target_index];
+	var on_focus_position_arrow_position = on_focus + Vector2(0, -15);
+	
+	select_arrow.global_position = on_focus_position_arrow_position;
+	
+	select_arrow.visible = true;
 
 func move_arrow_to_on_focus():
 	var on_focus = targets[select_target_index];
-	var select_arrow = $Select_arrow;
 	var on_focus_position_arrow_position = on_focus.global_local + Vector2(0, -15);
+	select_arrow.global_position = on_focus_position_arrow_position;
+
+func move_arrow_to_tile_on_focus():
+	var on_focus = targets[select_target_index];
+	var on_focus_position_arrow_position = on_focus + Vector2(0, -15);
 	select_arrow.global_position = on_focus_position_arrow_position;
 
 func display_summon_options(summon):

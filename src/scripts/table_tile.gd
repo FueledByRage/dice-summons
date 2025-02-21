@@ -14,6 +14,8 @@ var select_targets = []
 var possible_move_cells = []
 var selected_target_index = 0
 
+var summon_on_move
+
 func _ready() -> void:
 	add_to_group("table")
 	set_table()
@@ -76,8 +78,17 @@ func add_summon_to_path(summon):
 		"global_local": summon.global_position
 	})
 
-func highlight_summon_possible_moves(summon_position):
-	var possible_moves = calculate_possible_moves(summon_position, 5);
+func move_summon(summon):
+	var possible_moves = calculate_possible_moves(summon.local, 5);
+	possible_move_cells = possible_moves;
+	highlight_summon_possible_moves(possible_moves);
+	
+	return possible_moves.map(_tile_coords_to_global);
+
+func _tile_coords_to_global(tile_coords):
+	return to_global(map_to_local(tile_coords));
+
+func highlight_summon_possible_moves(possible_moves):
 	for move in possible_moves:
 		set_cell(move, 0, Vector2i(0,0));
 
@@ -101,13 +112,9 @@ func calculate_possible_moves(position, tile_moves):
 	
 	return possible_moves;
 
-func highlight_possible_moves(possible_move_cells):
-	for cell in possible_move_cells:
-		set_cell(cell, 0, Vector2(0,0), 0)
-
-func move_summon(summon, new_position):
-	summon.position = map_to_local(new_position)
-
+#func highlight_possible_moves(possible_move_cells):
+	#for cell in possible_move_cells:
+		#set_cell(cell, 0, Vector2(0,0), 0)
 
 func to_placing():
 	var placing_dice_scene = preload("res://src/scenes/place_dice.tscn");
@@ -132,3 +139,8 @@ func calculate_moves_in_direction(current_tile: Vector2, moves : int, direction:
 func is_tile_a_path(tile_coord):
 	var cell_atlas_coords = get_cell_atlas_coords(local_to_map(tile_coord))
 	return is_within_bounds(cell_atlas_coords) && cell_atlas_coords == Vector2i(1,1)
+
+func reset_possible_moves():
+	for cell in possible_move_cells:
+		set_cell(cell, 0, Vector2i(1,1));
+	possible_move_cells = [];

@@ -1,9 +1,10 @@
-[gd_scene load_steps=7 format=3 uid="uid://biauy0jg3huof"]
+[gd_scene load_steps=8 format=3 uid="uid://biauy0jg3huof"]
 
 [ext_resource type="Script" path="res://src/scripts/table.gd" id="1_m2nc3"]
 [ext_resource type="Texture2D" uid="uid://dqnmmhxsckbk7" path="res://assets/table/sprites/Sprite-0003-Sheet.png" id="1_qj1a4"]
 [ext_resource type="Script" path="res://src/scripts/table_tile.gd" id="2_wtxc0"]
 [ext_resource type="Script" path="res://src/scripts/units.gd" id="4_pgie8"]
+[ext_resource type="PackedScene" uid="uid://c3oqkp7ix2x5r" path="res://src/scenes/select_arrow.tscn" id="5_6l2al"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_alxow"]
 texture = ExtResource("1_qj1a4")
@@ -44,3 +45,6 @@ position = Vector2(604, 490)
 
 [node name="Units" type="Node2D" parent="."]
 script = ExtResource("4_pgie8")
+
+[node name="Select_arrow" parent="." instance=ExtResource("5_6l2al")]
+visible = false
