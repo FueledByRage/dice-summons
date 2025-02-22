@@ -9,9 +9,9 @@ var state = States.IDLE
 @onready var units = $Units;
 @onready var select_arrow = $Select_arrow;
 
+
 var targets = [];
 var select_target_index = 0;
-
 var casted_spell
 var summon_on_move
 
@@ -20,14 +20,13 @@ func _input(event: InputEvent) -> void:
 		States.PLACING:
 			if event.is_action_pressed("place"):
 				tile_map_layer.place()
-				_to_idle();
 		States.MOVING:
 			if event.is_action_released("confirm"):
 				on_confirm();
 		States.IDLE:
 			if event.is_action_pressed("placing"):
+				tile_map_layer.placing(_to_idle);
 				state = States.PLACING
-				tile_map_layer.to_placing();
 			if event.is_action_pressed('select'):
 				_to_selecting();
 			if event.is_action_pressed("move"):
@@ -53,10 +52,10 @@ func _input(event: InputEvent) -> void:
 					select_target_index = 0
 				else:
 					select_target_index += 1
-				move_arrow_to_tile_on_focus();
+				move_arrow_to_on_focus();
 			elif event.is_action_pressed("move_left") and select_target_index != 0:
 				select_target_index -= 1
-				move_arrow_to_tile_on_focus();
+				move_arrow_to_on_focus();
 			elif event.is_action_pressed("confirm"):
 				select.emit();
 
@@ -64,16 +63,17 @@ func on_confirm():
 	var selected = targets[select_target_index]
 	select_arrow.visible = false;
 	if state == States.SELECTING:
-		display_summon_options(selected.node)
+		display_summon_options(selected.value.node)
 		state = States.ATTACKING
 	elif state == States.ATTACKING:
-		select.emit(selected);
+		select.emit(selected.value);
 		return
-	select.emit(selected);
+	select.emit(selected.value);
 
 func _to_selecting():
-	targets = units.allies_units;
+	targets = units.allies_units.map(_unit_to_option)
 	state = States.SELECTING;
+	
 	if targets.size() > 0:
 		display_target_on_focus();
 
@@ -81,54 +81,56 @@ func _to_atacking(targets):
 	$Menu.queue_free();
 	state = States.ATTACKING;
 	select.connect(execute_spell, 4)
+	
 	display_target_on_focus();
 
 func _to_moving():
-	targets = units.allies_units;
+	targets = units.map(_unit_to_option);
 	select.connect(select_to_move, 4);
 	display_target_on_focus();
 	state = States.MOVING;
 
+func _unit_to_option(unit):
+	return {
+		'position': unit.global_local,
+'		value': unit
+	}
+
 func select_to_move(selected_summon):
-	targets = tile_map_layer.move_summon(selected_summon);
-	display_tiles_on_focus();
+	targets = tile_map_layer.move_summon(selected_summon).map(_position_to_option)
+	display_target_on_focus();
 	select.connect(move_summon.bind(selected_summon), 4)
 	state = States.ON_MOVING;
 
+func _position_to_option(position):
+	return {
+		'global_position': position,
+		'value': position,
+	}
+
 func move_summon(summon):
 	var selected_tile = targets[select_target_index];
-	summon.node.global_position = selected_tile;
+	
+	summon.node.global_position = selected_tile.value;
 	tile_map_layer.reset_possible_moves();
 	select_arrow.visible = false;
+	
 	_to_idle()
 
 func _to_idle():
 	state = States.IDLE
 
 func display_target_on_focus():
-	var on_focus = targets[select_target_index];
-	var on_focus_position_arrow_position = on_focus.global_local + Vector2(0, -15);
-	
-	select_arrow.global_position = on_focus_position_arrow_position;
-	
-	select_arrow.visible = true;
-
-func display_tiles_on_focus():
-	var on_focus = targets[select_target_index];
-	var on_focus_position_arrow_position = on_focus + Vector2(0, -15);
+	var on_focus_position = get_selected_option_property('global_position');
+	var on_focus_position_arrow_position = on_focus_position + Vector2(0, -15);
 	
 	select_arrow.global_position = on_focus_position_arrow_position;
 	
 	select_arrow.visible = true;
 
 func move_arrow_to_on_focus():
-	var on_focus = targets[select_target_index];
-	var on_focus_position_arrow_position = on_focus.global_local + Vector2(0, -15);
-	select_arrow.global_position = on_focus_position_arrow_position;
-
-func move_arrow_to_tile_on_focus():
-	var on_focus = targets[select_target_index];
-	var on_focus_position_arrow_position = on_focus + Vector2(0, -15);
+	var on_focus_position = get_selected_option_property('global_position');
+	var on_focus_position_arrow_position = on_focus_position + Vector2(0, -15);
 	select_arrow.global_position = on_focus_position_arrow_position;
 
 func display_summon_options(summon):
@@ -162,3 +164,6 @@ func execute_spell(target):
 	casted_spell = null;
 	_to_idle()
 	pass;
+	
+func get_selected_option_property(property):
+	return targets[select_target_index][property]

@@ -8,3 +8,6 @@ func get_all_units():
 	all_units.append_array(enemies_units);
 	all_units.append_array(allies_units);
 	return  all_units;
+
+func update_unit():
+	pass;
