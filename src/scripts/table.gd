@@ -20,9 +20,11 @@ func _input(event: InputEvent) -> void:
 		States.PLACING:
 			if event.is_action_pressed("place"):
 				tile_map_layer.place()
+
 		States.MOVING:
 			if event.is_action_released("confirm"):
 				on_confirm();
+
 		States.IDLE:
 			if event.is_action_pressed("placing"):
 				tile_map_layer.placing(_to_idle);
@@ -31,33 +33,35 @@ func _input(event: InputEvent) -> void:
 				_to_selecting();
 			if event.is_action_pressed("move"):
 				_to_moving();
+
 		States.SELECTING:
 			if event.is_action_pressed("move_right"):
-				if select_target_index + 1 >= targets.size():
-					select_target_index = 0
-				else:
-					select_target_index += 1
-				move_arrow_to_on_focus();
+				_next_target();
 			elif event.is_action_pressed("move_left") and select_target_index != 0:
-				select_target_index -= 1
-				move_arrow_to_on_focus();
+				_previous_target();
 			elif event.is_action_pressed("confirm"):
 				on_confirm()
+
 		States.ATTACKING:
 			if event.is_action_pressed("confirm"):
 				on_confirm();
+
 		States.ON_MOVING:
 			if event.is_action_pressed("move_right"):
-				if select_target_index + 1 >= targets.size():
-					select_target_index = 0
-				else:
-					select_target_index += 1
-				move_arrow_to_on_focus();
+				_next_target();
 			elif event.is_action_pressed("move_left") and select_target_index != 0:
-				select_target_index -= 1
-				move_arrow_to_on_focus();
+				_previous_target();
 			elif event.is_action_pressed("confirm"):
 				select.emit();
+
+func _next_target():
+	select_target_index = (select_target_index + 1) % targets.size()
+	move_arrow_to_on_focus()
+
+func _previous_target():
+	if select_target_index > 0:
+		select_target_index -= 1
+		move_arrow_to_on_focus()
 
 func on_confirm():
 	var selected = targets[select_target_index]
@@ -69,32 +73,6 @@ func on_confirm():
 		select.emit(selected.value);
 		return
 	select.emit(selected.value);
-
-func _to_selecting():
-	targets = units.allies_units.map(_unit_to_option)
-	state = States.SELECTING;
-	
-	if targets.size() > 0:
-		display_target_on_focus();
-
-func _to_atacking(targets):
-	$Menu.queue_free();
-	state = States.ATTACKING;
-	select.connect(execute_spell, 4)
-	
-	display_target_on_focus();
-
-func _to_moving():
-	targets = units.map(_unit_to_option);
-	select.connect(select_to_move, 4);
-	display_target_on_focus();
-	state = States.MOVING;
-
-func _unit_to_option(unit):
-	return {
-		'position': unit.global_local,
-'		value': unit
-	}
 
 func select_to_move(selected_summon):
 	targets = tile_map_layer.move_summon(selected_summon).map(_position_to_option)
@@ -116,9 +94,6 @@ func move_summon(summon):
 	select_arrow.visible = false;
 	
 	_to_idle()
-
-func _to_idle():
-	state = States.IDLE
 
 func display_target_on_focus():
 	var on_focus_position = get_selected_option_property('global_position');
@@ -145,19 +120,15 @@ func on_select_menu_option(option):
 
 func cast(spell):
 	casted_spell = spell;
-	var targets 
 	if(spell.target_type == "all"):
-		targets = units.get_all_units();
-		pass
+		targets = units.get_all_units().map(_unit_to_option)
 	elif(spell.target_type == "allies"):
-		targets = units.allies_units;
-		pass
+		targets = units.allies_units.map(_unit_to_option)
 	elif(spell.target_type == 'enemies'):
-		targets = units.enemies_units;
-		pass
+		targets = units.enemies_units.map(_unit_to_option)
 	elif(spell.target_type == 'own'):
 		pass
-	_to_atacking(targets);
+	_to_atacking();
 
 func execute_spell(target):
 	target.node.apply_change_on_life(casted_spell.life_effect);
@@ -167,3 +138,33 @@ func execute_spell(target):
 	
 func get_selected_option_property(property):
 	return targets[select_target_index][property]
+
+func _to_idle():
+	state = States.IDLE
+
+func _to_selecting():
+	targets = units.allies_units.map(_unit_to_option)
+	state = States.SELECTING;
+	
+	if targets.size() > 0:
+		display_target_on_focus();
+
+func _to_atacking():
+	$Menu.queue_free();
+	
+	state = States.ATTACKING;
+	select.connect(execute_spell, 4)
+	
+	display_target_on_focus();
+
+func _to_moving():
+	targets = units.map(_unit_to_option);
+	select.connect(select_to_move, 4);
+	display_target_on_focus();
+	state = States.MOVING;
+
+func _unit_to_option(unit):
+	return {
+		'position': unit.global_local,
+		'value': unit
+	}
