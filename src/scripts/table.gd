@@ -1,8 +1,8 @@
 extends Node
 
-signal select
+signal target_selected
 
-enum States { ATTACKING, PLACING, IDLE, SELECTING, MOVING, ON_MOVING }
+enum States { ATTACKING, PLACING, IDLE, SELECTING, MOVING, ON_MOVING, CASTING }
 var state = States.IDLE
 
 @onready var tile_map_layer = $TileMap;
@@ -23,7 +23,7 @@ func _input(event: InputEvent) -> void:
 
 		States.MOVING:
 			if event.is_action_released("confirm"):
-				on_confirm();
+				_on_confirm();
 
 		States.IDLE:
 			if event.is_action_pressed("placing"):
@@ -40,11 +40,11 @@ func _input(event: InputEvent) -> void:
 			elif event.is_action_pressed("move_left") and select_target_index != 0:
 				_previous_target();
 			elif event.is_action_pressed("confirm"):
-				on_confirm()
+				_on_confirm();
 
 		States.ATTACKING:
 			if event.is_action_pressed("confirm"):
-				on_confirm();
+				_on_confirm();
 
 		States.ON_MOVING:
 			if event.is_action_pressed("move_right"):
@@ -52,7 +52,15 @@ func _input(event: InputEvent) -> void:
 			elif event.is_action_pressed("move_left") and select_target_index != 0:
 				_previous_target();
 			elif event.is_action_pressed("confirm"):
-				select.emit();
+				target_selected.emit();
+
+		States.CASTING:
+			if event.is_action_pressed("move_right"):
+				_next_target();
+			elif event.is_action_pressed("move_left") and select_target_index != 0:
+				_previous_target();
+			elif event.is_action_pressed("confirm"):
+				target_selected.emit();
 
 func _next_target():
 	select_target_index = (select_target_index + 1) % targets.size()
@@ -63,21 +71,17 @@ func _previous_target():
 		select_target_index -= 1
 		move_arrow_to_on_focus()
 
-func on_confirm():
-	var selected = targets[select_target_index]
+func _on_confirm():
+	var selected = targets[select_target_index];
+	
 	select_arrow.visible = false;
-	if state == States.SELECTING:
-		display_summon_options(selected.value.node)
-		state = States.ATTACKING
-	elif state == States.ATTACKING:
-		select.emit(selected.value);
-		return
-	select.emit(selected.value);
+	
+	target_selected.emit(selected);
 
 func select_to_move(selected_summon):
 	targets = tile_map_layer.move_summon(selected_summon).map(_position_to_option)
 	display_target_on_focus();
-	select.connect(move_summon.bind(selected_summon), 4)
+	target_selected.connect(move_summon.bind(selected_summon), 4)
 	state = States.ON_MOVING;
 
 func _position_to_option(position):
@@ -128,10 +132,10 @@ func cast(spell):
 		targets = units.enemies_units.map(_unit_to_option)
 	elif(spell.target_type == 'own'):
 		pass
-	_to_atacking();
+	_to_selecting_target();
 
 func execute_spell(target):
-	target.node.apply_change_on_life(casted_spell.life_effect);
+	target.value.node.apply_change_on_life(casted_spell.life_effect);
 	casted_spell = null;
 	_to_idle()
 	pass;
@@ -143,23 +147,31 @@ func _to_idle():
 	state = States.IDLE
 
 func _to_selecting():
-	targets = units.allies_units.map(_unit_to_option)
-	state = States.SELECTING;
+	var allies_units = units.allies_units.map(_unit_to_option);
 	
-	if targets.size() > 0:
+	if allies_units.size() > 0:
+		targets = allies_units;
+		state = States.SELECTING;
+		target_selected.connect(_to_attacking, 4);
 		display_target_on_focus();
 
-func _to_atacking():
+func _to_attacking(selected):
+	display_summon_options(selected.value.node);
+	state = States.ATTACKING;
+	target_selected.connect(_to_selecting_target, 4);
+
+func _to_selecting_target():
 	$Menu.queue_free();
 	
-	state = States.ATTACKING;
-	select.connect(execute_spell, 4)
+	target_selected.connect(execute_spell, 4);
+	
+	state = States.CASTING;
 	
 	display_target_on_focus();
 
 func _to_moving():
 	targets = units.map(_unit_to_option);
-	select.connect(select_to_move, 4);
+	target_selected.connect(select_to_move, 4);
 	display_target_on_focus();
 	state = States.MOVING;
 
