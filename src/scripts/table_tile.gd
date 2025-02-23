@@ -37,7 +37,7 @@ func placing(on_placed):
 	dice_placed.connect(on_placed);
 
 func place():
-	var selected_tile = _get_selected_tile();
+	var selected_tile = get_selected_tile();
 	var dice_scene = preload("res://src/scenes/dice.tscn")
 	var dice_instance = dice_scene.instantiate()
 	
@@ -66,12 +66,12 @@ func summon(position):
 	var summon_scene = preload("res://src/scenes/summon.tscn")
 	var summon_instance = summon_scene.instantiate()
 	
-	summon_instance.global_position = to_local(_get_selected_tile())
+	summon_instance.global_position = to_local(get_selected_tile())
 	add_child(summon_instance)
 	_add_summon_to_path(summon_instance)
 
-func move_summon(summon):
-	var possible_moves = _calculate_possible_moves(summon.local, 5);
+func move_summon(selected):
+	var possible_moves = _calculate_possible_moves(selected.value.local, 5);
 	possible_move_cells = possible_moves;
 	_highlight_summon_possible_moves(possible_moves);
 	
@@ -94,7 +94,7 @@ func _add_summon_to_path(summon):
 func _is_within_bounds(tile: Vector2) -> bool:
 	return tile.x >= 0 and tile.x < WIDTH and tile.y >= 0 and tile.y < HEIGHT
 
-func _get_selected_tile():
+func get_selected_tile():
 	var tile = local_to_map(get_global_mouse_position())
 	return map_to_local(tile)
 

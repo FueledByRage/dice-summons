@@ -20,6 +20,7 @@ func _input(event: InputEvent) -> void:
 		States.PLACING:
 			if event.is_action_pressed("place"):
 				tile_map_layer.place()
+				_to_idle();
 
 		States.MOVING:
 			if event.is_action_released("confirm"):
@@ -35,32 +36,25 @@ func _input(event: InputEvent) -> void:
 				_to_moving();
 
 		States.SELECTING:
-			if event.is_action_pressed("move_right"):
-				_next_target();
-			elif event.is_action_pressed("move_left") and select_target_index != 0:
-				_previous_target();
-			elif event.is_action_pressed("confirm"):
-				_on_confirm();
+			handle_selecting_options(event);
 
 		States.ATTACKING:
 			if event.is_action_pressed("confirm"):
 				_on_confirm();
 
 		States.ON_MOVING:
-			if event.is_action_pressed("move_right"):
-				_next_target();
-			elif event.is_action_pressed("move_left") and select_target_index != 0:
-				_previous_target();
-			elif event.is_action_pressed("confirm"):
-				target_selected.emit();
+			handle_selecting_options(event);
 
 		States.CASTING:
-			if event.is_action_pressed("move_right"):
-				_next_target();
-			elif event.is_action_pressed("move_left") and select_target_index != 0:
-				_previous_target();
-			elif event.is_action_pressed("confirm"):
-				target_selected.emit();
+			handle_selecting_options(event);
+
+func handle_selecting_options(event):
+		if event.is_action_pressed("move_right"):
+			_next_target();
+		elif event.is_action_pressed("move_left") and select_target_index != 0:
+			_previous_target();
+		elif event.is_action_pressed("confirm"):
+				_on_confirm();
 
 func _next_target():
 	select_target_index = (select_target_index + 1) % targets.size()
@@ -72,35 +66,35 @@ func _previous_target():
 		move_arrow_to_on_focus()
 
 func _on_confirm():
-	var selected = targets[select_target_index];
+	var selected = get_selected_option();
 	
 	select_arrow.visible = false;
 	
 	target_selected.emit(selected);
+	
+	select_target_index = 0;
 
-func select_to_move(selected_summon):
-	targets = tile_map_layer.move_summon(selected_summon).map(_position_to_option)
+func _to_on_moving(selected_summon):
+	summon_on_move = selected_summon.value;
+	targets = tile_map_layer.move_summon(selected_summon).map(_position_to_option);
+	
 	display_target_on_focus();
-	target_selected.connect(move_summon.bind(selected_summon), 4)
+	
+	target_selected.connect(move_summon, 4);
+	
 	state = States.ON_MOVING;
 
-func _position_to_option(position):
-	return {
-		'global_position': position,
-		'value': position,
-	}
-
-func move_summon(summon):
-	var selected_tile = targets[select_target_index];
+func move_summon(selected_tile):
+	summon_on_move.node.global_position = selected_tile.value;
 	
-	summon.node.global_position = selected_tile.value;
 	tile_map_layer.reset_possible_moves();
 	select_arrow.visible = false;
 	
+	summon_on_move = null
 	_to_idle()
 
 func display_target_on_focus():
-	var on_focus_position = get_selected_option_property('global_position');
+	var on_focus_position = get_selected_option().position;
 	var on_focus_position_arrow_position = on_focus_position + Vector2(0, -15);
 	
 	select_arrow.global_position = on_focus_position_arrow_position;
@@ -108,7 +102,7 @@ func display_target_on_focus():
 	select_arrow.visible = true;
 
 func move_arrow_to_on_focus():
-	var on_focus_position = get_selected_option_property('global_position');
+	var on_focus_position = get_selected_option().position
 	var on_focus_position_arrow_position = on_focus_position + Vector2(0, -15);
 	select_arrow.global_position = on_focus_position_arrow_position;
 
@@ -118,9 +112,6 @@ func display_summon_options(summon):
 	menu.global_position = summon.global_position + Vector2(5, -5);
 	menu.add_options("Speels", summon.spells, cast);
 	add_child(menu);
-
-func on_select_menu_option(option):
-	pass
 
 func cast(spell):
 	casted_spell = spell;
@@ -135,13 +126,18 @@ func cast(spell):
 	_to_selecting_target();
 
 func execute_spell(target):
-	target.value.node.apply_change_on_life(casted_spell.life_effect);
-	casted_spell = null;
+	if(casted_spell):
+		target.value.node.apply_change_on_life(casted_spell.life_effect);
+		casted_spell = null;
 	_to_idle()
-	pass;
-	
+
+func get_selected_option():
+	if targets.size() > 0:
+		return targets[select_target_index]
+
 func get_selected_option_property(property):
-	return targets[select_target_index][property]
+	if targets.size() > 0:
+		return targets[select_target_index][property]
 
 func _to_idle():
 	state = States.IDLE
@@ -161,8 +157,9 @@ func _to_attacking(selected):
 	target_selected.connect(_to_selecting_target, 4);
 
 func _to_selecting_target():
-	$Menu.queue_free();
-	
+	if has_node("Menu"):
+		$Menu.queue_free()
+
 	target_selected.connect(execute_spell, 4);
 	
 	state = States.CASTING;
@@ -170,10 +167,19 @@ func _to_selecting_target():
 	display_target_on_focus();
 
 func _to_moving():
-	targets = units.map(_unit_to_option);
-	target_selected.connect(select_to_move, 4);
+	targets = units.allies_units.map(_unit_to_option);
+	
+	target_selected.connect(_to_on_moving, 4);
+	
 	display_target_on_focus();
+	
 	state = States.MOVING;
+
+func _position_to_option(position):
+	return {
+		'position': position,
+		'value': position,
+	}
 
 func _unit_to_option(unit):
 	return {
