@@ -18,28 +18,27 @@ var summon_on_move
 func _input(event: InputEvent) -> void:
 	match state:
 		States.PLACING:
-			if event.is_action_pressed("place"):
+			if event.is_action_released("place"):
 				tile_map_layer.place()
 				_to_idle();
 
 		States.MOVING:
-			if event.is_action_released("confirm"):
-				_on_confirm();
+			handle_selecting_options(event);
 
 		States.IDLE:
-			if event.is_action_pressed("placing"):
+			if event.is_action_released("placing"):
 				tile_map_layer.placing(_to_idle);
 				state = States.PLACING
-			if event.is_action_pressed('select'):
+			if event.is_action_released('select'):
 				_to_selecting();
-			if event.is_action_pressed("move"):
+			if event.is_action_released("move"):
 				_to_moving();
 
 		States.SELECTING:
 			handle_selecting_options(event);
 
 		States.ATTACKING:
-			if event.is_action_pressed("confirm"):
+			if event.is_action_released("confirm"):
 				_on_confirm();
 
 		States.ON_MOVING:
@@ -49,11 +48,11 @@ func _input(event: InputEvent) -> void:
 			handle_selecting_options(event);
 
 func handle_selecting_options(event):
-		if event.is_action_pressed("move_right"):
+		if event.is_action_released("move_right"):
 			_next_target();
-		elif event.is_action_pressed("move_left") and select_target_index != 0:
+		elif event.is_action_released("move_left") and select_target_index != 0:
 			_previous_target();
-		elif event.is_action_pressed("confirm"):
+		elif event.is_action_released("confirm"):
 				_on_confirm();
 
 func _next_target():
@@ -74,15 +73,25 @@ func _on_confirm():
 	
 	select_target_index = 0;
 
-func _to_on_moving(selected_summon):
-	summon_on_move = selected_summon.value;
-	targets = tile_map_layer.move_summon(selected_summon).map(_position_to_option);
-	
-	display_target_on_focus();
-	
-	target_selected.connect(move_summon, 4);
-	
-	state = States.ON_MOVING;
+func get_selected_option():
+	if targets.size() > 0:
+		return targets[select_target_index]
+
+func get_selected_option_property(property):
+	if targets.size() > 0:
+		return targets[select_target_index][property]
+
+func _position_to_option(position):
+	return {
+		'position': position,
+		'value': position,
+	}
+
+func _unit_to_option(unit):
+	return {
+		'position': unit.global_local,
+		'value': unit
+	}
 
 func move_summon(selected_tile):
 	summon_on_move.node.global_position = selected_tile.value;
@@ -97,14 +106,14 @@ func display_target_on_focus():
 	var on_focus_position = get_selected_option().position;
 	var on_focus_position_arrow_position = on_focus_position + Vector2(0, -15);
 	
-	select_arrow.global_position = on_focus_position_arrow_position;
+	select_arrow.move_to(on_focus_position_arrow_position);
 	
 	select_arrow.visible = true;
 
 func move_arrow_to_on_focus():
 	var on_focus_position = get_selected_option().position
 	var on_focus_position_arrow_position = on_focus_position + Vector2(0, -15);
-	select_arrow.global_position = on_focus_position_arrow_position;
+	select_arrow.move_to(on_focus_position_arrow_position);
 
 func display_summon_options(summon):
 	var menu = preload("res://src/scenes/menu.tscn").instantiate();
@@ -130,14 +139,6 @@ func execute_spell(target):
 		target.value.node.apply_change_on_life(casted_spell.life_effect);
 		casted_spell = null;
 	_to_idle()
-
-func get_selected_option():
-	if targets.size() > 0:
-		return targets[select_target_index]
-
-func get_selected_option_property(property):
-	if targets.size() > 0:
-		return targets[select_target_index][property]
 
 func _to_idle():
 	state = States.IDLE
@@ -166,6 +167,17 @@ func _to_selecting_target():
 	
 	display_target_on_focus();
 
+func _to_on_moving(selected_summon):
+	summon_on_move = selected_summon.value;
+	
+	targets = tile_map_layer.on_possible_moves(selected_summon, 5).map(_position_to_option);
+	
+	display_target_on_focus();
+	
+	target_selected.connect(move_summon, 4);
+	
+	state = States.ON_MOVING;
+
 func _to_moving():
 	targets = units.allies_units.map(_unit_to_option);
 	
@@ -174,15 +186,3 @@ func _to_moving():
 	display_target_on_focus();
 	
 	state = States.MOVING;
-
-func _position_to_option(position):
-	return {
-		'position': position,
-		'value': position,
-	}
-
-func _unit_to_option(unit):
-	return {
-		'position': unit.global_local,
-		'value': unit
-	}

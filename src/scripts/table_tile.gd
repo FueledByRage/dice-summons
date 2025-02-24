@@ -70,8 +70,8 @@ func summon(position):
 	add_child(summon_instance)
 	_add_summon_to_path(summon_instance)
 
-func move_summon(selected):
-	var possible_moves = _calculate_possible_moves(selected.value.local, 5);
+func on_possible_moves(tile, move):
+	var possible_moves = _calculate_possible_moves(tile.value.local, move);
 	possible_move_cells = possible_moves;
 	_highlight_summon_possible_moves(possible_moves);
 	

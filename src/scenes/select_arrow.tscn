@@ -9,3 +9,5 @@ script = ExtResource("1_b2mqt")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("2_14mu0")
+
+[connection signal="visibility_changed" from="." to="." method="_on_visibility_changed"]
