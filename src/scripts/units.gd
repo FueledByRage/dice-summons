@@ -14,3 +14,5 @@ func add_ally(ally):
 
 func add_enemy(enemy):
 	enemies_units.add_child(enemy);
+func update_unit():
+	pass;
