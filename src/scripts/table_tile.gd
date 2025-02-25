@@ -5,7 +5,7 @@ var HEIGHT = 20
 
 var maped_table: Dictionary = {}
 
-@onready var units = get_parent().get_node("Units");
+@onready var units = $Units;
 
 var placing_dice
 var path = []
@@ -66,17 +66,7 @@ func summon(position):
 	var summon_instance = summon_scene.instantiate()
 	
 	summon_instance.global_position = to_local(get_selected_tile())
-	add_child(summon_instance)
-	add_summon_to_path(summon_instance)
-
-func add_summon_to_path(summon):
-	units.allies_units.append({
-		"node": summon,
-		"name": summon.name,
-		"label": summon.name, 
-		"local": to_local(summon.global_position),
-		"global_local": summon.global_position
-	})
+	units.add_ally(summon_instance)
 
 func move_summon(summon):
 	var possible_moves = calculate_possible_moves(summon.local, 5);

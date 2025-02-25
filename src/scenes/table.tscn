@@ -38,13 +38,18 @@ position = Vector2(480, 160)
 tile_set = SubResource("TileSet_ncge7")
 script = ExtResource("2_wtxc0")
 
+[node name="Units" type="Node2D" parent="TileMap"]
+position = Vector2(-480, -160)
+script = ExtResource("4_pgie8")
+
+[node name="Allies" type="Node2D" parent="TileMap/Units"]
+
+[node name="Enemies" type="Node2D" parent="TileMap/Units"]
+
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(604, 490)
 
 [node name="UI" type="CanvasLayer" parent="."]
-
-[node name="Units" type="Node2D" parent="."]
-script = ExtResource("4_pgie8")
 
 [node name="Select_arrow" parent="." instance=ExtResource("5_6l2al")]
 visible = false
