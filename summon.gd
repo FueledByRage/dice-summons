@@ -9,6 +9,8 @@ var spells = [{
 	'life_effect': 2,
 }];
 
+var position_on_table
+
 func _ready() -> void:
 	update_life_label();
 
@@ -29,3 +31,6 @@ func update_life_label():
 		label.add_theme_color_override("font_color", Color(0,.6,0))
 
 	label.text = life_text
+
+func set_position_on_table(position):
+	position_on_table = position;

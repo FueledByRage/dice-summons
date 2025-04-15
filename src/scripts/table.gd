@@ -1,11 +1,11 @@
-extends Node
+extends Node2D
 
 signal target_selected
 
 enum States { ATTACKING, PLACING, IDLE, SELECTING, MOVING, ON_MOVING, CASTING }
 var state = States.IDLE
 
-@onready var tile_map_layer = $TileMap;
+@onready var table = $TileMap;
 @onready var units = $Units;
 @onready var select_arrow = $Select_arrow;
 
@@ -19,7 +19,7 @@ func _input(event: InputEvent) -> void:
 	match state:
 		States.PLACING:
 			if event.is_action_released("place"):
-				tile_map_layer.place()
+				table.place()
 				_to_idle();
 
 		States.MOVING:
@@ -27,7 +27,7 @@ func _input(event: InputEvent) -> void:
 
 		States.IDLE:
 			if event.is_action_released("placing"):
-				tile_map_layer.placing(_to_idle);
+				table.placing(_to_idle);
 				state = States.PLACING
 			if event.is_action_released('select'):
 				_to_selecting();
@@ -89,21 +89,21 @@ func _position_to_option(position):
 
 func _unit_to_option(unit):
 	return {
-		'position': unit.global_local,
+		'position': unit.global_position,
 		'value': unit
 	}
 
 func move_summon(selected_tile):
 	summon_on_move.node.global_position = selected_tile.value;
 	
-	tile_map_layer.reset_possible_moves();
+	table.reset_possible_moves();
 	select_arrow.visible = false;
 	
 	summon_on_move = null
 	_to_idle()
 
 func display_target_on_focus():
-	var on_focus_position = get_selected_option().position;
+	var on_focus_position = to_local(get_selected_option().position)
 	var on_focus_position_arrow_position = on_focus_position + Vector2(0, -15);
 	
 	select_arrow.move_to(on_focus_position_arrow_position);
@@ -111,7 +111,7 @@ func display_target_on_focus():
 	select_arrow.visible = true;
 
 func move_arrow_to_on_focus():
-	var on_focus_position = get_selected_option().position
+	var on_focus_position = get_selected_option().position;
 	var on_focus_position_arrow_position = on_focus_position + Vector2(0, -15);
 	select_arrow.move_to(on_focus_position_arrow_position);
 
@@ -125,18 +125,18 @@ func display_summon_options(summon):
 func cast(spell):
 	casted_spell = spell;
 	if(spell.target_type == "all"):
-		targets = units.get_all_units().map(_unit_to_option)
+		targets = table.get_all_units().map(_unit_to_option)
 	elif(spell.target_type == "allies"):
-		targets = units.allies_units.map(_unit_to_option)
+		targets = table.allies_units.map(_unit_to_option)
 	elif(spell.target_type == 'enemies'):
-		targets = units.enemies_units.map(_unit_to_option)
+		targets = table.enemies_units.map(_unit_to_option)
 	elif(spell.target_type == 'own'):
 		pass
 	_to_selecting_target();
 
 func execute_spell(target):
 	if(casted_spell):
-		target.value.node.apply_change_on_life(casted_spell.life_effect);
+		target.value.apply_change_on_life(casted_spell.life_effect);
 		casted_spell = null;
 	_to_idle()
 
@@ -144,16 +144,16 @@ func _to_idle():
 	state = States.IDLE
 
 func _to_selecting():
-	var allies_units = units.allies_units.map(_unit_to_option);
-	
-	if allies_units.size() > 0:
-		targets = allies_units;
-		state = States.SELECTING;
+	var allies_units_options = table.get_allies_units().map(_unit_to_option);
+
+	if allies_units_options.size() > 0:
+		targets = allies_units_options;
 		target_selected.connect(_to_attacking, 4);
+		state = States.SELECTING;
 		display_target_on_focus();
 
 func _to_attacking(selected):
-	display_summon_options(selected.value.node);
+	display_summon_options(selected.value);
 	state = States.ATTACKING;
 	target_selected.connect(_to_selecting_target, 4);
 
@@ -170,7 +170,7 @@ func _to_selecting_target():
 func _to_on_moving(selected_summon):
 	summon_on_move = selected_summon.value;
 	
-	targets = tile_map_layer.on_possible_moves(selected_summon, 5).map(_position_to_option);
+	targets = table.on_possible_moves(selected_summon, 5).map(_position_to_option);
 	
 	display_target_on_focus();
 	
@@ -179,7 +179,7 @@ func _to_on_moving(selected_summon):
 	state = States.ON_MOVING;
 
 func _to_moving():
-	targets = units.allies_units.map(_unit_to_option);
+	targets = table.get_allies().map(_unit_to_option);
 	
 	target_selected.connect(_to_on_moving, 4);
 	

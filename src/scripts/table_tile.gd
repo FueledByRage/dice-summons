@@ -65,14 +65,13 @@ func build_dice(dice_center: Vector2):
 func summon(position):
 	var summon_scene = preload("res://src/scenes/summon.tscn")
 	var summon_instance = summon_scene.instantiate()
+	var summon_target_position = get_selected_tile();
 	
-	summon_instance.global_position = to_local(get_selected_tile())
-	units.add_ally(summon_instance)
+	units.add_ally(summon_instance, summon_target_position)
 	add_child(summon_instance)
-	_add_summon_to_path(summon_instance)
 
 func on_possible_moves(tile, move):
-	var possible_moves = _calculate_possible_moves(tile.value.local, move);
+	var possible_moves = _calculate_possible_moves(tile.local, move);
 	possible_move_cells = possible_moves;
 	_highlight_summon_possible_moves(possible_moves);
 	
@@ -83,21 +82,24 @@ func reset_possible_moves():
 		set_cell(cell, 0, Vector2i(1,1));
 	possible_move_cells = [];
 
-func _add_summon_to_path(summon):
-	units.allies_units.append({
-		"node": summon,
-		"name": summon.name,
-		"label": summon.name, 
-		"local": to_local(summon.global_position),
-		"global_local": summon.global_position
-	})
+func get_allies_units():
+	return units.get_allies();
 
-func _is_within_bounds(tile: Vector2) -> bool:
+func _is_within_bounds(tile: Vector2i) -> bool:
 	return tile.x >= 0 and tile.x < WIDTH and tile.y >= 0 and tile.y < HEIGHT
 
 func get_selected_tile():
 	var tile = local_to_map(get_global_mouse_position())
 	return map_to_local(tile)
+
+func get_all_units():
+	return units.get_all_units();
+
+func get_enemies():
+	return units.get_enemies();
+
+func get_allies():
+	return units.get_allies();
 
 func _calculate_moves_in_direction(current_tile: Vector2, moves : int, direction: Vector2):
 	var path = [];
