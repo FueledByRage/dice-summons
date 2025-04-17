@@ -1,0 +1,21 @@
+[gd_scene load_steps=3 format=3 uid="uid://67j07yvl07og"]
+
+[ext_resource type="Script" path="res://src/scripts/UI/menu.gd" id="1_03875"]
+[ext_resource type="PackedScene" uid="uid://c3oqkp7ix2x5r" path="res://src/scenes/select_arrow.tscn" id="1_htd8w"]
+
+[node name="Menu" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_03875")
+
+[node name="box" type="NinePatchRect" parent="."]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="row" type="HBoxContainer" parent="box"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Select_arrow" parent="." instance=ExtResource("1_htd8w")]

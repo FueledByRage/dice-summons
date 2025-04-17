@@ -7,6 +7,7 @@ var spells = [{
 	'name': 'Heal',
 	'target_type': 'all',
 	'life_effect': 2,
+	'cost': 2,
 }];
 
 var position_on_table

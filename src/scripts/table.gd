@@ -14,6 +14,7 @@ var targets = [];
 var select_target_index = 0;
 var casted_spell
 var summon_on_move
+var DISCONECT_SIGNAL_ON_USE = 4
 
 func _input(event: InputEvent) -> void:
 	match state:
@@ -21,10 +22,6 @@ func _input(event: InputEvent) -> void:
 			if event.is_action_released("place"):
 				table.place()
 				_to_idle();
-
-		States.MOVING:
-			handle_selecting_options(event);
-
 		States.IDLE:
 			if event.is_action_released("placing"):
 				table.placing(_to_idle);
@@ -33,19 +30,11 @@ func _input(event: InputEvent) -> void:
 				_to_selecting();
 			if event.is_action_released("move"):
 				_to_moving();
-
-		States.SELECTING:
-			handle_selecting_options(event);
-
 		States.ATTACKING:
 			if event.is_action_released("confirm"):
 				_on_confirm();
-
-		States.ON_MOVING:
-			handle_selecting_options(event);
-
-		States.CASTING:
-			handle_selecting_options(event);
+	if state in [States.SELECTING, States.MOVING, States.ON_MOVING, States.CASTING]:
+		handle_selecting_options(event)
 
 func handle_selecting_options(event):
 		if event.is_action_released("move_right"):
@@ -119,7 +108,7 @@ func display_summon_options(summon):
 	var menu = preload("res://src/scenes/menu.tscn").instantiate();
 	
 	menu.global_position = summon.global_position + Vector2(5, -5);
-	menu.add_options("Speels", summon.spells, cast);
+	menu.add_options("Spells", summon.spells, cast);
 	add_child(menu);
 
 func cast(spell):
@@ -148,20 +137,20 @@ func _to_selecting():
 
 	if allies_units_options.size() > 0:
 		targets = allies_units_options;
-		target_selected.connect(_to_attacking, 4);
+		target_selected.connect(_to_attacking, DISCONECT_SIGNAL_ON_USE);
 		state = States.SELECTING;
 		display_target_on_focus();
 
 func _to_attacking(selected):
 	display_summon_options(selected.value);
 	state = States.ATTACKING;
-	target_selected.connect(_to_selecting_target, 4);
+	target_selected.connect(_to_selecting_target, DISCONECT_SIGNAL_ON_USE);
 
 func _to_selecting_target():
 	if has_node("Menu"):
 		$Menu.queue_free()
 
-	target_selected.connect(execute_spell, 4);
+	target_selected.connect(execute_spell, DISCONECT_SIGNAL_ON_USE);
 	
 	state = States.CASTING;
 	
@@ -174,14 +163,14 @@ func _to_on_moving(selected_summon):
 	
 	display_target_on_focus();
 	
-	target_selected.connect(move_summon, 4);
+	target_selected.connect(move_summon, DISCONECT_SIGNAL_ON_USE);
 	
 	state = States.ON_MOVING;
 
 func _to_moving():
 	targets = table.get_allies().map(_unit_to_option);
 	
-	target_selected.connect(_to_on_moving, 4);
+	target_selected.connect(_to_on_moving, DISCONECT_SIGNAL_ON_USE);
 	
 	display_target_on_focus();
 	
