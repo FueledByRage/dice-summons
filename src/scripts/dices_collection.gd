@@ -1,12 +1,11 @@
 extends Node
-
-@onready var data = load("res://src/scripts/services/data.gd")
+ 
 var player_collection_path = "res://data/player/collection.json"
 
-var collection;
+@onready var collection = ReadData.load_json_file(player_collection_path);
 
-func _init() -> void:
-	collection = data.load_json_file(player_collection_path);
+func _ready() -> void:
+	pass
 
 func get_player_collection():
 	if collection:

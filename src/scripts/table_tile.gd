@@ -36,14 +36,15 @@ func placing(on_placed):
 	
 	dice_placed.connect(on_placed);
 
-func place():
+func place(selected_dice):
 	var selected_tile = get_selected_tile();
 	var dice_scene = preload("res://src/scenes/dice.tscn")
 	var dice_instance = dice_scene.instantiate()
 	
 	$Place_dice.queue_free()
 	build_dice(selected_tile)
-	summon(selected_tile)
+	
+	summon(selected_dice, selected_tile)
 
 func build_dice(dice_center: Vector2):
 	var dice_face = Vector2i(1,1)
@@ -62,7 +63,7 @@ func build_dice(dice_center: Vector2):
 		path.push_back(cell_coord)
 		set_cell(cell_coord, 0, dice_face, 0)
 
-func summon(position):
+func summon(dice, position):
 	var summon_scene = preload("res://src/scenes/summon.tscn")
 	var summon_instance = summon_scene.instantiate()
 	var summon_target_position = get_selected_tile();

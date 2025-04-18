@@ -8,31 +8,43 @@ var state = States.IDLE
 @onready var table = $TileMap;
 @onready var units = $Units;
 @onready var select_arrow = $Select_arrow;
+@onready var dices_module = $dices_module;
 
 
 var targets = [];
 var select_target_index = 0;
-var casted_spell
-var summon_on_move
+var casted_spell;
+var summon_on_move;
+var dices_on_hand = [];
+var dice_on_hand;
+
 var DISCONECT_SIGNAL_ON_USE = 4
 
 func _input(event: InputEvent) -> void:
 	match state:
 		States.PLACING:
-			if event.is_action_released("place"):
-				table.place()
+			if event.is_action_pressed("confirm"):
+				table.place(dices_on_hand);
 				_to_idle();
 		States.IDLE:
-			if event.is_action_released("placing"):
-				table.placing(_to_idle);
-				state = States.PLACING
 			if event.is_action_released('select'):
 				_to_selecting();
 			if event.is_action_released("move"):
 				_to_moving();
+			if event.is_action_pressed("placing"):
+				var menu = load("res://src/scenes/UI/menu.tscn").instantiate()
+				
+				dices_on_hand = dices_module.draw_dices(3)
+				
+				menu.init(dices_on_hand, select_dice);
+				
+				menu.global_position = get_local_mouse_position();
+				
+				add_child(menu)
 		States.ATTACKING:
 			if event.is_action_released("confirm"):
 				_on_confirm();
+
 	if state in [States.SELECTING, States.MOVING, States.ON_MOVING, States.CASTING]:
 		handle_selecting_options(event)
 
@@ -43,6 +55,18 @@ func handle_selecting_options(event):
 			_previous_target();
 		elif event.is_action_released("confirm"):
 				_on_confirm();
+
+func select_dice(selected_dice):
+	var no_selected_dices = dices_on_hand.filter(func(dice): return dice['id'] != selected_dice['id']);
+	
+	dice_on_hand = selected_dice;
+	dices_on_hand = [];
+	
+	table.placing(_to_idle);
+
+	state = States.PLACING
+	
+	dices_module.put_dices(no_selected_dices);
 
 func _next_target():
 	select_target_index = (select_target_index + 1) % targets.size()

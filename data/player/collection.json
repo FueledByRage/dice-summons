@@ -1,5 +1,327 @@
 [
-	{
-		
+  {
+	"id": "1",
+	"label": "foo",
+	"icon": "res://icon.svg",
+	"cost": "2",
+	"summon": {
+	  "name": "foo",
+	  "sprite": "res://icon.svg",
+	  "damage": "1",
+	  "level": "2",
+	  "life": 5,
+	  "spells": [
+		{ "name": "curse", "life_effect": -2, "cost": 2, "target_type": "enemies" },
+		{ "name": "heal", "life_effect": 3, "cost": 2, "target_type": "allies" }
+	  ]
 	}
+  },
+  {
+	"id": "2",
+	"label": "bar",
+	"icon": "res://icon.svg",
+	"cost": "3",
+	"summon": {
+	  "name": "bar",
+	  "sprite": "res://icon.svg",
+	  "damage": "2",
+	  "level": "3",
+	  "life": 7,
+	  "spells": [
+		{ "name": "flame arrow", "life_effect": -3, "cost": 3, "target_type": "enemies" },
+		{ "name": "impulse", "life_effect": -1, "cost": 1, "target_type": "enemies" }
+	  ]
+	}
+  },
+  {
+	"id": "3",
+	"label": "foo",
+	"icon": "res://icon.svg",
+	"cost": "1",
+	"summon": {
+	  "name": "foo apprentice",
+	  "sprite": "res://icon.svg",
+	  "damage": "1",
+	  "level": "1",
+	  "life": 4,
+	  "spells": [
+		{ "name": "impulse", "life_effect": -1, "cost": 1, "target_type": "enemies" },
+		{ "name": "heal", "life_effect": 2, "cost": 1, "target_type": "allies" }
+	  ]
+	}
+  },
+  {
+	"id": "4",
+	"label": "zap",
+	"icon": "res://icon.svg",
+	"cost": "4",
+	"summon": {
+	  "name": "zap mage",
+	  "sprite": "res://icon.svg",
+	  "damage": "2",
+	  "level": "4",
+	  "life": 6,
+	  "spells": [
+		{ "name": "flame arrow", "life_effect": -3, "cost": 3, "target_type": "enemies" },
+		{ "name": "curse", "life_effect": -2, "cost": 2, "target_type": "enemies" }
+	  ]
+	}
+  },
+  {
+	"id": "5",
+	"label": "healer",
+	"icon": "res://icon.svg",
+	"cost": "2",
+	"summon": {
+	  "name": "lightbringer",
+	  "sprite": "res://icon.svg",
+	  "damage": "0",
+	  "level": "2",
+	  "life": 8,
+	  "spells": [
+		{ "name": "heal", "life_effect": 5, "cost": 3, "target_type": "allies" }
+	  ]
+	}
+  },
+  {
+	"id": "6",
+	"label": "ember",
+	"icon": "res://icon.svg",
+	"cost": "3",
+	"summon": {
+	  "name": "ember",
+	  "sprite": "res://icon.svg",
+	  "damage": "2",
+	  "level": "2",
+	  "life": 5,
+	  "spells": [
+		{ "name": "flame arrow", "life_effect": -4, "cost": 3, "target_type": "enemies" }
+	  ]
+	}
+  },
+  {
+	"id": "7",
+	"label": "shade",
+	"icon": "res://icon.svg",
+	"cost": "2",
+	"summon": {
+	  "name": "shade",
+	  "sprite": "res://icon.svg",
+	  "damage": "1",
+	  "level": "3",
+	  "life": 6,
+	  "spells": [
+		{ "name": "curse", "life_effect": -2, "cost": 2, "target_type": "enemies" }
+	  ]
+	}
+  },
+  {
+	"id": "8",
+	"label": "spark",
+	"icon": "res://icon.svg",
+	"cost": "2",
+	"summon": {
+	  "name": "spark",
+	  "sprite": "res://icon.svg",
+	  "damage": "1",
+	  "level": "1",
+	  "life": 4,
+	  "spells": [
+		{ "name": "impulse", "life_effect": -1, "cost": 1, "target_type": "enemies" }
+	  ]
+	}
+  },
+  {
+	"id": "9",
+	"label": "warden",
+	"icon": "res://icon.svg",
+	"cost": "3",
+	"summon": {
+	  "name": "warden",
+	  "sprite": "res://icon.svg",
+	  "damage": "1",
+	  "level": "3",
+	  "life": 9,
+	  "spells": [
+		{ "name": "heal", "life_effect": 2, "cost": 2, "target_type": "allies" }
+	  ]
+	}
+  },
+  {
+	"id": "10",
+	"label": "thorn",
+	"icon": "res://icon.svg",
+	"cost": "2",
+	"summon": {
+	  "name": "thorn",
+	  "sprite": "res://icon.svg",
+	  "damage": "2",
+	  "level": "2",
+	  "life": 6,
+	  "spells": [
+		{ "name": "impulse", "life_effect": -2, "cost": 2, "target_type": "enemies" }
+	  ]
+	}
+  },
+  {
+	"id": "11",
+	"label": "nova",
+	"icon": "res://icon.svg",
+	"cost": "4",
+	"summon": {
+	  "name": "nova",
+	  "sprite": "res://icon.svg",
+	  "damage": "3",
+	  "level": "4",
+	  "life": 7,
+	  "spells": [
+		{ "name": "flame arrow", "life_effect": -4, "cost": 3, "target_type": "enemies" }
+	  ]
+	}
+  },
+  {
+	"id": "12",
+	"label": "aegis",
+	"icon": "res://icon.svg",
+	"cost": "2",
+	"summon": {
+	  "name": "aegis",
+	  "sprite": "res://icon.svg",
+	  "damage": "0",
+	  "level": "2",
+	  "life": 10,
+	  "spells": [
+		{ "name": "heal", "life_effect": 3, "cost": 2, "target_type": "allies" }
+	  ]
+	}
+  },
+  {
+	"id": "13",
+	"label": "hexer",
+	"icon": "res://icon.svg",
+	"cost": "3",
+	"summon": {
+	  "name": "hexer",
+	  "sprite": "res://icon.svg",
+	  "damage": "2",
+	  "level": "3",
+	  "life": 6,
+	  "spells": [
+		{ "name": "curse", "life_effect": -3, "cost": 2, "target_type": "enemies" }
+	  ]
+	}
+  },
+  {
+	"id": "14",
+	"label": "bolt",
+	"icon": "res://icon.svg",
+	"cost": "2",
+	"summon": {
+	  "name": "bolt",
+	  "sprite": "res://icon.svg",
+	  "damage": "2",
+	  "level": "2",
+	  "life": 5,
+	  "spells": [
+		{ "name": "impulse", "life_effect": -2, "cost": 2, "target_type": "enemies" }
+	  ]
+	}
+  },
+  {
+	"id": "15",
+	"label": "bloom",
+	"icon": "res://icon.svg",
+	"cost": "1",
+	"summon": {
+	  "name": "bloom",
+	  "sprite": "res://icon.svg",
+	  "damage": "1",
+	  "level": "1",
+	  "life": 3,
+	  "spells": [
+		{ "name": "heal", "life_effect": 2, "cost": 1, "target_type": "allies" }
+	  ]
+	}
+  },
+  {
+	"id": "16",
+	"label": "ghost",
+	"icon": "res://icon.svg",
+	"cost": "3",
+	"summon": {
+	  "name": "ghost",
+	  "sprite": "res://icon.svg",
+	  "damage": "1",
+	  "level": "3",
+	  "life": 4,
+	  "spells": [
+		{ "name": "curse", "life_effect": -2, "cost": 2, "target_type": "enemies" },
+		{ "name": "impulse", "life_effect": -1, "cost": 1, "target_type": "enemies" }
+	  ]
+	}
+  },
+  {
+	"id": "17",
+	"label": "emberling",
+	"icon": "res://icon.svg",
+	"cost": "2",
+	"summon": {
+	  "name": "emberling",
+	  "sprite": "res://icon.svg",
+	  "damage": "1",
+	  "level": "2",
+	  "life": 4,
+	  "spells": [
+		{ "name": "flame arrow", "life_effect": -3, "cost": 2, "target_type": "enemies" }
+	  ]
+	}
+  },
+  {
+	"id": "18",
+	"label": "medic",
+	"icon": "res://icon.svg",
+	"cost": "2",
+	"summon": {
+	  "name": "medic",
+	  "sprite": "res://icon.svg",
+	  "damage": "0",
+	  "level": "2",
+	  "life": 6,
+	  "spells": [
+		{ "name": "heal", "life_effect": 4, "cost": 2, "target_type": "allies" }
+	  ]
+	}
+  },
+  {
+	"id": "19",
+	"label": "flare",
+	"icon": "res://icon.svg",
+	"cost": "3",
+	"summon": {
+	  "name": "flare",
+	  "sprite": "res://icon.svg",
+	  "damage": "3",
+	  "level": "3",
+	  "life": 5,
+	  "spells": [
+		{ "name": "flame arrow", "life_effect": -4, "cost": 3, "target_type": "enemies" }
+	  ]
+	}
+  },
+  {
+	"id": "20",
+	"label": "pulse",
+	"icon": "res://icon.svg",
+	"cost": "2",
+	"summon": {
+	  "name": "pulse",
+	  "sprite": "res://icon.svg",
+	  "damage": "2",
+	  "level": "2",
+	  "life": 5,
+	  "spells": [
+		{ "name": "impulse", "life_effect": -2, "cost": 2, "target_type": "enemies" }
+	  ]
+	}
+  }
 ]

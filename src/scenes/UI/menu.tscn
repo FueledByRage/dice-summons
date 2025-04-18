@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://c3oqkp7ix2x5r" path="res://src/scenes/select_arrow.tscn" id="1_htd8w"]
 
 [node name="Menu" type="Control"]
+z_index = 50
 layout_mode = 3
 anchors_preset = 0
 script = ExtResource("1_03875")
