@@ -1,16 +1,19 @@
 extends Node2D
 
-var DAMAGE = 3;
-var LIFE = 15;
-var CURRENT_LIFE = LIFE;
-var spells = [{
-	'name': 'Heal',
-	'target_type': 'all',
-	'life_effect': 2,
-	'cost': 2,
-}];
+var NAME = '';
+var DAMAGE = 0;
+var LIFE = 0;
+var CURRENT_LIFE = 0;
+var SPELLS = [];
 
 var position_on_table
+
+func init(summon_data) -> void:
+	NAME = summon_data.name;
+	DAMAGE = summon_data.damage;
+	LIFE = summon_data.life;
+	CURRENT_LIFE = summon_data.life;
+	SPELLS = summon_data.spells;
 
 func _ready() -> void:
 	update_life_label();

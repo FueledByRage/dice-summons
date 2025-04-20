@@ -1,7 +1,7 @@
 extends Node2D
 
 func _ready() -> void:
-	init_idle_animation();
+	#init_idle_animation();
 	pass
 
 func init_idle_animation():
