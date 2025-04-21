@@ -28,8 +28,8 @@ var dice_on_hand
 @onready var dices_module = $dices_module
 @onready var camera = $Camera2D;
 
-func _ready() -> void:
-	_to_idle();
+#func _ready() -> void:
+	#_to_idle();
 
 # === Ciclo Principal ===
 func _input(event: InputEvent) -> void:
@@ -114,7 +114,7 @@ func _to_idle():
 		}
 	]
 	
-	menu.init(options, on_dice_selected)
+	menu.init(options, on_action_selected)
 	#menu.global_position = get_local_mouse_position()
 	
 	camera.add_child(menu)
@@ -151,7 +151,9 @@ func _to_casting_spell():
 func _to_on_moving(selected_summon):
 	summon_on_move = selected_summon.value
 	targets = table.on_possible_moves(selected_summon, 5).map(_position_to_option)
+	
 	display_target_on_focus()
+	
 	target_selected.connect(move_summon, DISCONECT_SIGNAL_ON_USE)
 	state = States.ON_MOVING
 
@@ -168,7 +170,7 @@ func cast(spell):
 	if spell.target_type == "all":
 		targets = table.get_all_units().map(_unit_to_option)
 	elif spell.target_type == "allies":
-		targets = table.allies_units.map(_unit_to_option)
+		targets = table.get_allies_units().map(_unit_to_option)
 	elif spell.target_type == "enemies":
 		#targets = table.enemies_units.map(_unit_to_option)
 		targets = table.get_allies_units().map(_unit_to_option)
@@ -187,7 +189,7 @@ func execute_spell(target):
 
 # === Funcionalidades de Movimento ===
 func move_summon(selected_tile):
-	summon_on_move.node.global_position = selected_tile.value
+	summon_on_move.global_position = selected_tile.position
 	table.reset_possible_moves()
 	select_arrow.visible = false
 	summon_on_move = null
@@ -221,7 +223,7 @@ func move_arrow_to_on_focus():
 func display_summon_options(summon):
 	var menu = preload("res://src/scenes/menu.tscn").instantiate()
 	menu.global_position = summon.global_position + Vector2(5, -5)
-	menu.add_options("Spells", summon.spells, cast)
+	menu.add_options("Spells", summon.SPELLS, cast)
 	add_child(menu)
 	
 func _selecting_dices():

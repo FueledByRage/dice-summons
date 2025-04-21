@@ -121,9 +121,11 @@ func summon(dice, position):
 	add_child(summon_instance)
 
 func on_possible_moves(tile, move):
-	var possible_moves = _calculate_possible_moves(tile.local, move);
+	var possible_moves = _calculate_possible_moves(to_local(tile.position), move);
 	possible_move_cells = possible_moves;
+	
 	_highlight_summon_possible_moves(possible_moves);
+	
 	return possible_moves.map(_tile_coords_to_global);
 
 func reset_possible_moves():
