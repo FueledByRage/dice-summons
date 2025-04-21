@@ -7,7 +7,7 @@ signal target_selected
 
 
 # === Constantes e Enums ===
-enum States { ATTACKING, PLACING, IDLE, SELECTING, MOVING, ON_MOVING, CASTING }
+enum States { SELECTING_SPELL, PLACING, IDLE, SELECTING, MOVING, ON_MOVING, CASTING_SPELL }
 const DISCONECT_SIGNAL_ON_USE = 4
 
 
@@ -26,24 +26,27 @@ var dice_on_hand
 @onready var units = $Units
 @onready var select_arrow = $Select_arrow
 @onready var dices_module = $dices_module
+@onready var camera = $Camera2D;
 
+func _ready() -> void:
+	_to_idle();
 
 # === Ciclo Principal ===
 func _input(event: InputEvent) -> void:
 	match state:
 		States.IDLE:
 			if event.is_action_released("select"):
-				_to_selecting()
+				_to_selecting_attacking_summon()
 			elif event.is_action_released("move"):
 				_to_moving()
 			elif event.is_action_pressed("placing"):
 				_selecting_dices()
 
-		States.ATTACKING:
+		States.SELECTING_SPELL:
 			if event.is_action_released("confirm"):
 				_on_confirm()
 
-	if state in [States.SELECTING, States.MOVING, States.ON_MOVING, States.CASTING]:
+	if state in [States.SELECTING, States.MOVING, States.ON_MOVING, States.CASTING_SPELL]:
 		handle_selecting_options(event)
 
 
@@ -67,6 +70,7 @@ func _previous_target():
 
 func _on_confirm():
 	var selected = get_selected_option()
+	
 	select_arrow.visible = false
 	target_selected.emit(selected)
 	select_target_index = 0
@@ -96,27 +100,52 @@ func _unit_to_option(unit):
 
 # === Estados ===
 func _to_idle():
+	var menu = load("res://src/scenes/UI/menu.tscn").instantiate()
+	var options = [
+		{
+			"label": "Attack",
+			"icon": "res://icon.svg",
+			"state": States.SELECTING_SPELL
+		},
+		{
+			"label": "Move",
+			"icon": "res://icon.svg",
+			"state": States.MOVING
+		}
+	]
+	
+	menu.init(options, on_dice_selected)
+	#menu.global_position = get_local_mouse_position()
+	
+	camera.add_child(menu)
 	state = States.IDLE
 
-func _to_selecting():
+func on_action_selected(action_selected):
+	match action_selected.state:
+		States.SELECTING_SPELL:
+			_to_selecting_attacking_summon()
+		States.MOVING:
+			_to_moving()
+
+func _to_selecting_attacking_summon():
 	var allies_units_options = table.get_allies_units().map(_unit_to_option)
 	if allies_units_options.size() > 0:
 		targets = allies_units_options
-		target_selected.connect(_to_attacking, DISCONECT_SIGNAL_ON_USE)
+		target_selected.connect(_to_selecting_spell, DISCONECT_SIGNAL_ON_USE)
 		state = States.SELECTING
 		display_target_on_focus()
 
-func _to_attacking(selected):
+func _to_selecting_spell(selected):
 	display_summon_options(selected.value)
-	state = States.ATTACKING
-	target_selected.connect(_to_selecting_target, DISCONECT_SIGNAL_ON_USE)
+	state = States.SELECTING_SPELL
+	target_selected.connect(_to_casting_spell, DISCONECT_SIGNAL_ON_USE)
 
-func _to_selecting_target():
+func _to_casting_spell():
 	if has_node("Menu"):
 		$Menu.queue_free()
 
 	target_selected.connect(execute_spell, DISCONECT_SIGNAL_ON_USE)
-	state = States.CASTING
+	state = States.CASTING_SPELL
 	display_target_on_focus()
 
 func _to_on_moving(selected_summon):
@@ -141,10 +170,13 @@ func cast(spell):
 	elif spell.target_type == "allies":
 		targets = table.allies_units.map(_unit_to_option)
 	elif spell.target_type == "enemies":
-		targets = table.enemies_units.map(_unit_to_option)
+		#targets = table.enemies_units.map(_unit_to_option)
+		targets = table.get_allies_units().map(_unit_to_option)
 	elif spell.target_type == "own":
 		pass
-	_to_selecting_target()
+	else:
+		targets = [];
+	_to_casting_spell()
 
 func execute_spell(target):
 	if casted_spell:
