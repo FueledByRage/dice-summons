@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3 uid="uid://dir8puawashbg"]
+
+[ext_resource type="Script" path="res://src/scripts/roll_controller.gd" id="1_e03lb"]
+
+[node name="Roll_Controller" type="Control"]
+z_index = 999
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_e03lb")
+
+[node name="row" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0

@@ -24,3 +24,6 @@ func get_enemies():
 
 func get_allies():
 	return allies_units.get_children();
+
+func has_units():
+	return allies_units.get_child_count() > 0;

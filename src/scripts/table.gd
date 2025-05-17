@@ -1,15 +1,10 @@
 extends Node2D
 
-# TO-DO - Break it in small pieces
-
 # === Sinais ===
 signal target_selected
 
-
 # === Constantes e Enums ===
-enum States { SELECTING_SPELL, PLACING, IDLE, SELECTING, MOVING, ON_MOVING, CASTING_SPELL }
-const DISCONECT_SIGNAL_ON_USE = 4
-
+enum States { ROLLING, DRAW_PHASE, SELECTING_SPELL, PLACING, IDLE, SELECTING, MOVING, ON_MOVING, CASTING_SPELL }
 
 # === Variáveis de Estado ===
 var state = States.IDLE
@@ -20,27 +15,39 @@ var summon_on_move
 var dices_on_hand = []
 var dice_on_hand
 
+var points = {
+	"summon_points": 0,
+	"move_points": 0,
+	"energy_points": 0,
+}
 
 # === Referências para Nós ===
 @onready var table = $TileMap
-@onready var units = $Units
+@onready var units = $TileMap/Units
 @onready var select_arrow = $Select_arrow
 @onready var dices_module = $dices_module
-@onready var camera = $Camera2D;
+@onready var camera = $Camera2D
 
-#func _ready() -> void:
-	#_to_idle();
+# =====================================================================
+# === INICIALIZAÇÃO ==================================================
+# =====================================================================
 
-# === Ciclo Principal ===
+func _ready() -> void:
+	_to_roll()
+
+# =====================================================================
+# === ENTRADA DO USUÁRIO (INPUT) =====================================
+# =====================================================================
+
 func _input(event: InputEvent) -> void:
 	match state:
 		States.IDLE:
 			if event.is_action_released("select"):
-				_to_selecting_attacking_summon()
+				to_selecting_attacking_summon()
 			elif event.is_action_released("move"):
-				_to_moving()
+				to_moving()
 			elif event.is_action_pressed("placing"):
-				_selecting_dices()
+				selecting_dices()
 
 		States.SELECTING_SPELL:
 			if event.is_action_released("confirm"):
@@ -49,8 +56,10 @@ func _input(event: InputEvent) -> void:
 	if state in [States.SELECTING, States.MOVING, States.ON_MOVING, States.CASTING_SPELL]:
 		handle_selecting_options(event)
 
+# =====================================================================
+# === LÓGICA DE SELEÇÃO ===============================================
+# =====================================================================
 
-# === Manipulação de Seleção ===
 func handle_selecting_options(event):
 	if event.is_action_released("move_right"):
 		_next_target()
@@ -70,13 +79,10 @@ func _previous_target():
 
 func _on_confirm():
 	var selected = get_selected_option()
-	
 	select_arrow.visible = false
 	target_selected.emit(selected)
 	select_target_index = 0
 
-
-# === Obtenção de Opções Selecionadas ===
 func get_selected_option():
 	if targets.size() > 0:
 		return targets[select_target_index]
@@ -97,74 +103,69 @@ func _unit_to_option(unit):
 		'value': unit
 	}
 
+# =====================================================================
+# === MÁQUINA DE ESTADOS =============================================
+# =====================================================================
 
-# === Estados ===
+func _to_roll():
+	state = States.ROLLING
+	roll()
+
+func _to_draw_phase():
+	state = States.DRAW_PHASE
+
 func _to_idle():
 	var menu = load("res://src/scenes/UI/menu.tscn").instantiate()
+	var has_units = units.has_units()
 	var options = [
 		{
 			"label": "Attack",
 			"icon": "res://icon.svg",
-			"state": States.SELECTING_SPELL
+			"selectable": has_units,
+			"action": to_selecting_attacking_summon,
 		},
 		{
 			"label": "Move",
 			"icon": "res://icon.svg",
-			"state": States.MOVING
+			"selectable": has_units,
+			"action": to_moving,
+		},
+		{
+			"label": "Summon",
+			"icon": "res://icon.svg",
+			"selectable": points["summon_points"] > 0,
+			"action": selecting_dices,
 		}
 	]
-	
-	menu.init(options, on_action_selected)
-	#menu.global_position = get_local_mouse_position()
-	
+
+	menu.init(options)
 	camera.add_child(menu)
 	state = States.IDLE
 
-func on_action_selected(action_selected):
-	match action_selected.state:
-		States.SELECTING_SPELL:
-			_to_selecting_attacking_summon()
-		States.MOVING:
-			_to_moving()
+# =====================================================================
+# === FLUXO DE ATAQUE / FEITIÇO ======================================
+# =====================================================================
 
-func _to_selecting_attacking_summon():
+func to_selecting_attacking_summon():
 	var allies_units_options = table.get_allies_units().map(_unit_to_option)
 	if allies_units_options.size() > 0:
 		targets = allies_units_options
-		target_selected.connect(_to_selecting_spell, DISCONECT_SIGNAL_ON_USE)
+		target_selected.connect(_to_selecting_spell, CONNECT_ONE_SHOT)
 		state = States.SELECTING
 		display_target_on_focus()
 
 func _to_selecting_spell(selected):
 	display_summon_options(selected.value)
 	state = States.SELECTING_SPELL
-	target_selected.connect(_to_casting_spell, DISCONECT_SIGNAL_ON_USE)
+	target_selected.connect(_to_casting_spell, CONNECT_ONE_SHOT)
 
 func _to_casting_spell():
 	if has_node("Menu"):
 		$Menu.queue_free()
-
-	target_selected.connect(execute_spell, DISCONECT_SIGNAL_ON_USE)
+	target_selected.connect(execute_spell, CONNECT_ONE_SHOT)
 	state = States.CASTING_SPELL
 	display_target_on_focus()
 
-func _to_on_moving(selected_summon):
-	summon_on_move = selected_summon.value
-	targets = table.on_possible_moves(selected_summon, 5).map(_position_to_option)
-	
-	display_target_on_focus()
-	
-	target_selected.connect(move_summon, DISCONECT_SIGNAL_ON_USE)
-	state = States.ON_MOVING
-
-func _to_moving():
-	targets = table.get_allies().map(_unit_to_option)
-	target_selected.connect(_to_on_moving, DISCONECT_SIGNAL_ON_USE)
-	display_target_on_focus()
-	state = States.MOVING
-
-
-# === Funcionalidades de Magia ===
 func cast(spell):
 	casted_spell = spell
 	if spell.target_type == "all":
@@ -172,12 +173,11 @@ func cast(spell):
 	elif spell.target_type == "allies":
 		targets = table.get_allies_units().map(_unit_to_option)
 	elif spell.target_type == "enemies":
-		#targets = table.enemies_units.map(_unit_to_option)
-		targets = table.get_allies_units().map(_unit_to_option)
+		targets = table.get_allies_units().map(_unit_to_option) # <- revisar se está correto
 	elif spell.target_type == "own":
 		pass
 	else:
-		targets = [];
+		targets = []
 	_to_casting_spell()
 
 func execute_spell(target):
@@ -186,8 +186,23 @@ func execute_spell(target):
 		casted_spell = null
 	_to_idle()
 
+# =====================================================================
+# === MOVIMENTO ======================================================
+# =====================================================================
 
-# === Funcionalidades de Movimento ===
+func to_moving():
+	targets = table.get_allies().map(_unit_to_option)
+	target_selected.connect(_to_on_moving, CONNECT_ONE_SHOT)
+	display_target_on_focus()
+	state = States.MOVING
+
+func _to_on_moving(selected_summon):
+	summon_on_move = selected_summon.value
+	targets = table.on_possible_moves(selected_summon, 5).map(_position_to_option)
+	display_target_on_focus()
+	target_selected.connect(move_summon, CONNECT_ONE_SHOT)
+	state = States.ON_MOVING
+
 func move_summon(selected_tile):
 	summon_on_move.global_position = selected_tile.position
 	table.reset_possible_moves()
@@ -195,20 +210,55 @@ func move_summon(selected_tile):
 	summon_on_move = null
 	_to_idle()
 
+# =====================================================================
+# === DADOS ==========================================================
+# =====================================================================
 
-# === Seleção de Dados ===
+func selecting_dices():
+	var menu = load("res://src/scenes/UI/menu.tscn").instantiate()
+	dices_on_hand = dices_module.draw_dices(3);
+	
+	menu.init(dices_on_hand.map(dice_to_option))
+	camera.add_child(menu)
+
 func on_dice_selected(selected_dice):
+	print(selected_dice);
 	var no_selected_dices = dices_on_hand.filter(func(dice): return dice['id'] != selected_dice['id'])
-
 	dice_on_hand = selected_dice
 	dices_on_hand = []
-
 	table.placing(_to_idle)
 	state = States.PLACING
 	dices_module.put_dices(no_selected_dices)
 
+func dice_to_option(dice):
+	print(dice);
+	return {
+		"label": dice["label"],
+		"icon": dice["icon"],
+		"selectable": true,
+		"action": func(): on_dice_selected(dice),
+	}
 
-# === UI e Visuals ===
+func get_dice_on_hand():
+	return dice_on_hand
+
+func roll():
+	var roll_controller = load("res://src/scenes/roll_controller.tscn").instantiate()
+	roll_controller.setup(3)
+	camera.add_child(roll_controller)
+	roll_controller.roll(on_roll_completed)
+
+func on_roll_completed(results):
+	print(results)
+	points["summon_points"] = results[0]
+	points["move_points"] = results[1]
+	points["energy_points"] = results[2]
+	_to_idle()
+
+# =====================================================================
+# === VISUAL/UI ======================================================
+# =====================================================================
+
 func display_target_on_focus():
 	var on_focus_position = to_local(get_selected_option().position)
 	var on_focus_position_arrow_position = on_focus_position + Vector2(0, -15)
@@ -225,15 +275,3 @@ func display_summon_options(summon):
 	menu.global_position = summon.global_position + Vector2(5, -5)
 	menu.add_options("Spells", summon.SPELLS, cast)
 	add_child(menu)
-	
-func _selecting_dices():
-	var menu = load("res://src/scenes/UI/menu.tscn").instantiate()
-	dices_on_hand = dices_module.draw_dices(3)
-	
-	menu.init(dices_on_hand, on_dice_selected)
-	menu.global_position = get_local_mouse_position()
-	
-	add_child(menu)
-
-func get_dice_on_hand():
-	return dice_on_hand;

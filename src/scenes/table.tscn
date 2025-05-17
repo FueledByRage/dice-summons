@@ -1,10 +1,11 @@
-[gd_scene load_steps=9 format=3 uid="uid://biauy0jg3huof"]
+[gd_scene load_steps=10 format=3 uid="uid://biauy0jg3huof"]
 
 [ext_resource type="Script" path="res://src/scripts/table.gd" id="1_m2nc3"]
 [ext_resource type="Texture2D" uid="uid://dqnmmhxsckbk7" path="res://assets/table/sprites/Sprite-0003-Sheet.png" id="1_qj1a4"]
 [ext_resource type="Script" path="res://src/scripts/table_tile.gd" id="2_wtxc0"]
 [ext_resource type="Script" path="res://src/scripts/units.gd" id="4_pgie8"]
 [ext_resource type="PackedScene" uid="uid://c3oqkp7ix2x5r" path="res://src/scenes/select_arrow.tscn" id="5_6l2al"]
+[ext_resource type="Script" path="res://src/scripts/UI/camera_2d.gd" id="5_emoct"]
 [ext_resource type="PackedScene" uid="uid://c264044poyajp" path="res://src/scenes/summons_module.tscn" id="6_a8dbx"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_alxow"]
@@ -49,6 +50,7 @@ script = ExtResource("4_pgie8")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(604, 490)
+script = ExtResource("5_emoct")
 
 [node name="UI" type="CanvasLayer" parent="."]
 

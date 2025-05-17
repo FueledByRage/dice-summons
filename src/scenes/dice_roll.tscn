@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://cqkjjd8dvm6o5"]
+
+[ext_resource type="Script" path="res://src/scripts/dice_roll.gd" id="1_10omj"]
+
+[node name="Dice_roll" type="MarginContainer"]
+size_flags_horizontal = 4
+size_flags_vertical = 4
+script = ExtResource("1_10omj")
+
+[node name="result" type="Label" parent="."]
+layout_mode = 2

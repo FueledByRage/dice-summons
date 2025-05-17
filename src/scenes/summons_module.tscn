@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://src/scripts/dices_module.gd" id="1_rliu0"]
 [ext_resource type="Script" path="res://src/scripts/dices_collection.gd" id="2_u6u1g"]
 
-[node name="dices_module" type="Node"]
+[node name="Dices_module" type="Node"]
 script = ExtResource("1_rliu0")
 
 [node name="dices_collection" type="Node" parent="."]

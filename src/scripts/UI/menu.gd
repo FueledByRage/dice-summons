@@ -26,12 +26,11 @@ func _input(event: InputEvent) -> void:
 	elif event.is_action_released("move_left"):
 		handle_option_change(-1)
 	elif event.is_action_released("confirm"):
-		# Disable input immediately to prevent double triggering
 		input_active = false
 		set_process_input(false)
 		
 		var selected_option = $box/row.get_children()[current_option]
-		select.emit(selected_option.option)
+		selected_option.action.call()
 		queue_free()
 
 func handle_option_change(modifier):
@@ -47,14 +46,15 @@ func handle_option_change(modifier):
 	
 	select_arrow.position = selected_option.position
 
-func init(options, on_select):
+func init(options):
 	var row = $box/row
 	for option in options:
-		var option_box = load("res://src/scenes/UI/option_box.tscn").instantiate()
-		
-		option_box.init(option)
-		
-		row.add_child(option_box)
-	select.connect(on_select, 4)
-	maximum_options = row.get_child_count() - 1
+		if(option["selectable"]):
+			var option_box = load("res://src/scenes/UI/option_box.tscn").instantiate()
+			
+			option_box.init(option)
+			
+			row.add_child(option_box)
 	
+	
+	maximum_options = row.get_child_count() - 1
