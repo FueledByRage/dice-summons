@@ -126,13 +126,16 @@ func on_possible_moves(tile, move):
 	
 	_highlight_summon_possible_moves(possible_moves);
 	
-	return possible_moves.map(_tile_coords_to_global);
+	return possible_moves.map(_possible_moves_to_global);
 
 func reset_possible_moves():
 	for cell in possible_move_cells:
-		set_cell(cell, 0, Vector2i(1,1));
+		set_cell(cell["tile"], 0, Vector2i(1,1));
 	possible_move_cells = [];
 
+func calulate_distance_in_tiles(first_point, second_point):
+	pass
+	
 func _calculate_possible_moves(position, tile_moves):
 	var directions = {
 		"up": Vector2(0, -32),
@@ -149,6 +152,7 @@ func _calculate_possible_moves(position, tile_moves):
 
 	for direction in directions.values():
 		var moves = _calculate_moves_in_direction(position, tile_moves, direction)
+		
 		possible_moves.append_array(moves);
 	
 	return possible_moves;
@@ -157,16 +161,21 @@ func _calculate_moves_in_direction(current_tile: Vector2, moves: int, direction:
 	var path = [];
 	var next_tile = current_tile + direction;
 	
-	while _is_tile_a_path(next_tile) and moves > 0:
-		path.append(local_to_map(next_tile));
-		moves -= 1
+	var moves_left = moves;
+	
+	while _is_tile_a_path(next_tile) and moves_left > 0:
+		path.append({
+			"tile": local_to_map(next_tile),
+			"distance": (moves - moves_left) + 1
+		});
+		moves_left -= 1
 		next_tile += direction;
 	
 	return path;
 
 func _highlight_summon_possible_moves(possible_moves):
 	for move in possible_moves:
-		set_cell(move, 0, Vector2i(0,0));
+		set_cell(move["tile"], 0, Vector2i(0,0));
 
 func get_allies_units():
 	return units.get_allies();
@@ -188,8 +197,11 @@ func _is_tile_a_path(tile_coord):
 	var cell_atlas_coords = get_cell_atlas_coords(local_to_map(tile_coord))
 	return _is_within_bounds(cell_atlas_coords) and cell_atlas_coords == Vector2i(1,1)
 
-func _tile_coords_to_global(tile_coords):
-	return to_global(map_to_local(tile_coords));
+func _possible_moves_to_global(possible_moves):
+	return {
+		"tile": to_global(map_to_local(possible_moves["tile"])),
+		"distance": possible_moves["distance"]
+	}
 
 func _is_within_bounds(tile: Vector2i) -> bool:
 	return tile.x >= 0 and tile.x < WIDTH and tile.y >= 0 and tile.y < HEIGHT

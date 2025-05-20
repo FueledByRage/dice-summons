@@ -79,9 +79,11 @@ func _previous_target():
 
 func _on_confirm():
 	var selected = get_selected_option()
+	
 	select_arrow.visible = false
-	target_selected.emit(selected)
 	select_target_index = 0
+	
+	target_selected.emit(selected)
 
 func get_selected_option():
 	if targets.size() > 0:
@@ -93,8 +95,8 @@ func get_selected_option_property(property):
 
 func _position_to_option(position):
 	return {
-		'position': position,
-		'value': position
+		'position': position["tile"],
+		'distance': position["distance"]
 	}
 
 func _unit_to_option(unit):
@@ -212,16 +214,21 @@ func to_moving():
 
 func _to_on_moving(selected_summon):
 	summon_on_move = selected_summon.value
-	targets = table.on_possible_moves(selected_summon, 5).map(_position_to_option)
+	targets = table.on_possible_moves(selected_summon, points["move_points"]).map(_position_to_option)
+	
 	display_target_on_focus()
+	
 	target_selected.connect(move_summon, CONNECT_ONE_SHOT)
 	state = States.ON_MOVING
 
-func move_summon(selected_tile):
-	summon_on_move.global_position = selected_tile.position
+func move_summon(selected_tile_data):
+	summon_on_move.global_position = selected_tile_data.position
+	
 	table.reset_possible_moves()
+	''
 	select_arrow.visible = false
 	summon_on_move = null
+	points["move_points"] -= selected_tile_data["distance"]
 	_to_idle()
 
 # =====================================================================
@@ -275,6 +282,7 @@ func on_roll_completed(results):
 func display_target_on_focus():
 	var on_focus_position = to_local(get_selected_option().position)
 	var on_focus_position_arrow_position = on_focus_position + Vector2(0, -15)
+	
 	select_arrow.move_to(on_focus_position_arrow_position)
 	select_arrow.visible = true
 
