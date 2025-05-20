@@ -18,16 +18,16 @@ func roll(on_roll_completed):
 	
 	for i in range(number_of_rolls):
 		var dice = dice_roll_scene.instantiate()
-		$row.add_child(dice)
+		$dices_wrapper/rows_container.add_child(dice)
 		dice.start(on_roll)
 		
-		await get_tree().create_timer(1.5).timeout
+		await get_tree().create_timer(.5).timeout
 
 	roll_completed.connect(on_roll_completed, DISCONNECT_ONESHOT)
 
 func on_roll(result):
 	results.append(result)
 	if results.size() == MAXIMUM_ROLLS:
-		await get_tree().create_timer(1.7).timeout
+		await get_tree().create_timer(.7).timeout
 		roll_completed.emit(results)
 		queue_free()

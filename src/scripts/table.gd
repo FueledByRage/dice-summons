@@ -47,7 +47,7 @@ func _input(event: InputEvent) -> void:
 			elif event.is_action_released("move"):
 				to_moving()
 			elif event.is_action_pressed("placing"):
-				selecting_dices()
+				to_placing()
 
 		States.SELECTING_SPELL:
 			if event.is_action_released("confirm"):
@@ -114,7 +114,12 @@ func _to_roll():
 func _to_draw_phase():
 	state = States.DRAW_PHASE
 
+
 func _to_idle():
+	targets.clear()
+	select_target_index = 0
+	state = States.IDLE
+	
 	var menu = load("res://src/scenes/UI/menu.tscn").instantiate()
 	var has_units = units.has_units()
 	var options = [
@@ -134,13 +139,24 @@ func _to_idle():
 			"label": "Summon",
 			"icon": "res://icon.svg",
 			"selectable": points["summon_points"] > 0,
-			"action": selecting_dices,
+			"action": to_placing,
+		},
+		{
+			"label": "Pass Turn",
+			"icon": "res://icon.svg",
+			"selectable": true,
+			"action": _to_roll
+			
 		}
 	]
 
 	menu.init(options)
 	camera.add_child(menu)
-	state = States.IDLE
+
+func to_placing():
+	state = States.PLACING
+	table.placing(_to_idle)
+	points["summon_points"] -= dice_on_hand["cost"]
 
 # =====================================================================
 # === FLUXO DE ATAQUE / FEITIÇO ======================================
@@ -160,8 +176,6 @@ func _to_selecting_spell(selected):
 	target_selected.connect(_to_casting_spell, CONNECT_ONE_SHOT)
 
 func _to_casting_spell():
-	if has_node("Menu"):
-		$Menu.queue_free()
 	target_selected.connect(execute_spell, CONNECT_ONE_SHOT)
 	state = States.CASTING_SPELL
 	display_target_on_focus()
@@ -173,7 +187,7 @@ func cast(spell):
 	elif spell.target_type == "allies":
 		targets = table.get_allies_units().map(_unit_to_option)
 	elif spell.target_type == "enemies":
-		targets = table.get_allies_units().map(_unit_to_option) # <- revisar se está correto
+		targets = table.get_allies_units().map(_unit_to_option)
 	elif spell.target_type == "own":
 		pass
 	else:
@@ -214,7 +228,7 @@ func move_summon(selected_tile):
 # === DADOS ==========================================================
 # =====================================================================
 
-func selecting_dices():
+func draw_dices():
 	var menu = load("res://src/scenes/UI/menu.tscn").instantiate()
 	dices_on_hand = dices_module.draw_dices(3);
 	
@@ -222,18 +236,18 @@ func selecting_dices():
 	camera.add_child(menu)
 
 func on_dice_selected(selected_dice):
-	print(selected_dice);
 	var no_selected_dices = dices_on_hand.filter(func(dice): return dice['id'] != selected_dice['id'])
+	
+	dices_module.put_dices(no_selected_dices)
 	dice_on_hand = selected_dice
 	dices_on_hand = []
-	table.placing(_to_idle)
-	state = States.PLACING
-	dices_module.put_dices(no_selected_dices)
+	_to_idle();
+
 
 func dice_to_option(dice):
-	print(dice);
 	return {
 		"label": dice["label"],
+		"subtitle": "⚡" + " " + str(dice["cost"]),
 		"icon": dice["icon"],
 		"selectable": true,
 		"action": func(): on_dice_selected(dice),
@@ -249,11 +263,10 @@ func roll():
 	roll_controller.roll(on_roll_completed)
 
 func on_roll_completed(results):
-	print(results)
-	points["summon_points"] = results[0]
-	points["move_points"] = results[1]
-	points["energy_points"] = results[2]
-	_to_idle()
+	points["summon_points"] += results[0]
+	points["move_points"] += results[1]
+	points["energy_points"] += results[2]
+	draw_dices()
 
 # =====================================================================
 # === VISUAL/UI ======================================================

@@ -9,14 +9,12 @@ layout_mode = 3
 anchors_preset = 0
 script = ExtResource("1_03875")
 
-[node name="box" type="NinePatchRect" parent="."]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
-
-[node name="row" type="HBoxContainer" parent="box"]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
-
 [node name="Select_arrow" parent="." instance=ExtResource("1_htd8w")]
+
+[node name="options_wrapper" type="MarginContainer" parent="."]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="options" type="HBoxContainer" parent="options_wrapper"]
+layout_mode = 2

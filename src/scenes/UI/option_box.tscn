@@ -1,16 +1,24 @@
-[gd_scene load_steps=2 format=3 uid="uid://cmg0mahesdh6m"]
+[gd_scene load_steps=3 format=3 uid="uid://cmg0mahesdh6m"]
 
 [ext_resource type="Script" path="res://src/scripts/UI/option_box.gd" id="1_6p7dx"]
+[ext_resource type="Texture2D" uid="uid://csci22pw0861c" path="res://icon.svg" id="2_7fm6r"]
 
 [node name="Option_Box" type="VBoxContainer"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+offset_right = 128.0
+offset_bottom = 187.0
 script = ExtResource("1_6p7dx")
 
-[node name="icon" type="Sprite2D" parent="."]
+[node name="icon" type="TextureRect" parent="."]
+layout_mode = 2
+texture = ExtResource("2_7fm6r")
+stretch_mode = 2
 
 [node name="label" type="Label" parent="."]
 layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 20
+text = "aaaaa"
+
+[node name="subtitle" type="Label" parent="."]
+layout_mode = 2
+size_flags_horizontal = 4
