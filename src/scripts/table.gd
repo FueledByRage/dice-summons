@@ -15,18 +15,15 @@ var summon_on_move
 var dices_on_hand = []
 var dice_on_hand
 
-var points = {
-	"summon_points": 0,
-	"move_points": 0,
-	"energy_points": 0,
-}
-
 # === Referências para Nós ===
 @onready var table = $TileMap
 @onready var units = $TileMap/Units
 @onready var select_arrow = $Select_arrow
 @onready var dices_module = $dices_module
 @onready var camera = $Camera2D
+@onready var points_service = $points_service
+@onready var points_enum = points_service.Points
+@onready var canvas_layer = $CanvasLayer
 
 # =====================================================================
 # === INICIALIZAÇÃO ==================================================
@@ -93,10 +90,10 @@ func get_selected_option_property(property):
 	if targets.size() > 0:
 		return targets[select_target_index][property]
 
-func _position_to_option(position):
+func _position_to_option(tile_position):
 	return {
-		'position': position["tile"],
-		'distance': position["distance"]
+		'position': tile_position["tile"],
+		'distance': tile_position["distance"]
 	}
 
 func _unit_to_option(unit):
@@ -111,7 +108,7 @@ func _unit_to_option(unit):
 
 func _to_roll():
 	state = States.ROLLING
-	roll()
+	roll_points()
 
 func _to_draw_phase():
 	state = States.DRAW_PHASE
@@ -122,8 +119,9 @@ func _to_idle():
 	select_target_index = 0
 	state = States.IDLE
 	
-	var menu = load("res://src/scenes/UI/menu.tscn").instantiate()
 	var has_units = units.has_units()
+	var has_summon_points = points_service.get_points(points_enum.SUMMON_POINTS) > 0;
+	
 	var options = [
 		{
 			"label": "Attack",
@@ -140,7 +138,7 @@ func _to_idle():
 		{
 			"label": "Summon",
 			"icon": "res://icon.svg",
-			"selectable": points["summon_points"] > 0,
+			"selectable": has_summon_points,
 			"action": to_placing,
 		},
 		{
@@ -151,14 +149,13 @@ func _to_idle():
 			
 		}
 	]
-
-	menu.init(options)
-	camera.add_child(menu)
+	
+	canvas_layer.show_menu(options)
 
 func to_placing():
 	state = States.PLACING
 	table.placing(_to_idle)
-	points["summon_points"] -= dice_on_hand["cost"]
+	points_service.remove_points(points_enum.SUMMON_POINTS, dice_on_hand["cost"])
 
 # =====================================================================
 # === FLUXO DE ATAQUE / FEITIÇO ======================================
@@ -189,8 +186,9 @@ func cast(spell):
 	elif spell.target_type == "allies":
 		targets = table.get_allies_units().map(_unit_to_option)
 	elif spell.target_type == "enemies":
-		targets = table.get_allies_units().map(_unit_to_option)
+		targets = table.get_enemies().map(_unit_to_option)
 	elif spell.target_type == "own":
+		#execute_spell()
 		pass
 	else:
 		targets = []
@@ -214,21 +212,21 @@ func to_moving():
 
 func _to_on_moving(selected_summon):
 	summon_on_move = selected_summon.value
-	targets = table.on_possible_moves(selected_summon, points["move_points"]).map(_position_to_option)
+	var points_move = points_service.get_points(points_enum.MOVE_POINTS)
+	targets = table.on_possible_moves(selected_summon, points_move).map(_position_to_option)
 	
 	display_target_on_focus()
 	
 	target_selected.connect(move_summon, CONNECT_ONE_SHOT)
 	state = States.ON_MOVING
 
-func move_summon(selected_tile_data):
-	summon_on_move.global_position = selected_tile_data.position
+func move_summon(selected_position_data):
+	summon_on_move.global_position = selected_position_data.position
 	
 	table.reset_possible_moves()
-	''
 	select_arrow.visible = false
 	summon_on_move = null
-	points["move_points"] -= selected_tile_data["distance"]
+	points_service.remove_points(points_enum.MOVE_POINTS, dice_on_hand["cost"])
 	_to_idle()
 
 # =====================================================================
@@ -236,11 +234,9 @@ func move_summon(selected_tile_data):
 # =====================================================================
 
 func draw_dices():
-	var menu = load("res://src/scenes/UI/menu.tscn").instantiate()
 	dices_on_hand = dices_module.draw_dices(3);
 	
-	menu.init(dices_on_hand.map(dice_to_option))
-	camera.add_child(menu)
+	canvas_layer.display_dices_menu(dices_on_hand, on_dice_selected);
 
 func on_dice_selected(selected_dice):
 	var no_selected_dices = dices_on_hand.filter(func(dice): return dice['id'] != selected_dice['id'])
@@ -250,29 +246,14 @@ func on_dice_selected(selected_dice):
 	dices_on_hand = []
 	_to_idle();
 
-
-func dice_to_option(dice):
-	return {
-		"label": dice["label"],
-		"subtitle": "⚡" + " " + str(dice["cost"]),
-		"icon": dice["icon"],
-		"selectable": true,
-		"action": func(): on_dice_selected(dice),
-	}
-
 func get_dice_on_hand():
 	return dice_on_hand
 
-func roll():
-	var roll_controller = load("res://src/scenes/roll_controller.tscn").instantiate()
-	roll_controller.setup(3)
-	camera.add_child(roll_controller)
-	roll_controller.roll(on_roll_completed)
+func roll_points():
+	canvas_layer.roll_dices(on_roll_completed)
 
 func on_roll_completed(results):
-	points["summon_points"] += results[0]
-	points["move_points"] += results[1]
-	points["energy_points"] += results[2]
+	points_service.add_all_points(results[0], results[1], results[2]);
 	draw_dices()
 
 # =====================================================================
@@ -292,7 +273,4 @@ func move_arrow_to_on_focus():
 	select_arrow.move_to(on_focus_position_arrow_position)
 
 func display_summon_options(summon):
-	var menu = preload("res://src/scenes/menu.tscn").instantiate()
-	menu.global_position = summon.global_position + Vector2(5, -5)
-	menu.add_options("Spells", summon.SPELLS, cast)
-	add_child(menu)
+	canvas_layer.show_options("Spells", summon.SPELLS, cast)

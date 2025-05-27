@@ -10,11 +10,6 @@ func _ready() -> void:
 	y_sort_origin = 2
 	pass # Replace with function body.
 
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	pass
-
 func init_tile(dice_map):
 	for face_coords in dice_map:
 		var face = Vector2i(1,1);

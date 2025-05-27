@@ -56,7 +56,7 @@ func placing(on_placed):
 	
 	dice_placed.connect(on_placed);
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	var center_tile = get_selected_tile()
 	var selected_form = FORMS[selected_form_index];
 
@@ -97,7 +97,6 @@ func _process(delta: float) -> void:
 func place(selected_dice, dice_form):
 	var selected_tile = get_selected_tile();
 	var dice_scene = preload("res://src/scenes/dice.tscn")
-	var dice_instance = dice_scene.instantiate()
 	
 	build_dice(selected_tile, dice_form)
 	summon(selected_dice, selected_tile)
@@ -110,12 +109,11 @@ func build_dice(dice_center, form):
 		path.push_back(cell_coord)
 		set_cell(cell_coord, 0, dice_face, 0)
 
-func summon(dice, position):
+func summon(dice, summon_target_position):
 	var summon_scene = preload("res://src/scenes/summon.tscn")
 	var summon_instance = summon_scene.instantiate();
 	
 	summon_instance.init(dice.summon);
-	var summon_target_position = get_selected_tile();
 	
 	units.add_ally(summon_instance, summon_target_position)
 	add_child(summon_instance)
@@ -133,9 +131,6 @@ func reset_possible_moves():
 		set_cell(cell["tile"], 0, Vector2i(1,1));
 	possible_move_cells = [];
 
-func calulate_distance_in_tiles(first_point, second_point):
-	pass
-	
 func _calculate_possible_moves(position, tile_moves):
 	var directions = {
 		"up": Vector2(0, -32),
