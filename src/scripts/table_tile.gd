@@ -21,6 +21,7 @@ var is_placing = false;
 var prev_selected_tile
 
 var selected_form_index = 0;
+var prev_selected_form_index = 0;
 
 var FORMS = [
 	[
@@ -61,7 +62,7 @@ func _process(_delta: float) -> void:
 	var selected_form = FORMS[selected_form_index];
 
 	if(is_placing):
-		if(center_tile != prev_selected_tile):
+		if(center_tile != prev_selected_tile || selected_form_index != prev_selected_form_index):
 			for prev_cell in select_dice_cells:
 				set_cell(prev_cell, 0, Vector2i(0, 1), 0)
 				
@@ -71,17 +72,20 @@ func _process(_delta: float) -> void:
 				var cell_coord = local_to_map(to_local(center_tile) + (cell_form * 32))
 				if(_is_within_bounds(cell_coord)):
 					prev_selected_tile = center_tile;
+					prev_selected_form_index = selected_form_index
 					select_dice_cells.push_back(cell_coord)
 					set_cell(cell_coord, 0, place_cell, 0)
 		
-		if(Input.is_action_just_pressed("move_left")):
-			if(selected_form_index == FORMS.size()):
+		if(Input.is_action_just_pressed("move_right")):
+			prev_selected_form_index = selected_form_index
+			if(selected_form_index == (FORMS.size() - 1)):
 				selected_form_index = 0;
 			else:
 				selected_form_index += 1
-		if(Input.is_action_pressed("move_right")):
-			if(selected_form_index <= 0):
-				selected_form_index = FORMS.size();
+		if(Input.is_action_pressed("move_left")):
+			prev_selected_form_index = selected_form_index
+			if(selected_form_index == 0):
+				selected_form_index = (FORMS.size() - 1);
 			else:
 				selected_form_index -= 1;
 		if(Input.is_action_just_pressed("confirm")):

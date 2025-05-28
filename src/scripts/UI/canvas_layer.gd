@@ -52,7 +52,7 @@ func dice_to_option(dice, summon_points, on_selected: Callable):
 		"label": dice["label"],
 		"subtitle": "⚡" + " " + str(dice["cost"]),
 		"icon": dice["icon"],
-		"selectable": dice["cost"] < summon_points,
+		"selectable": dice["cost"] <= summon_points,
 		"action": func(): on_selected.call(dice),
 	}
 
