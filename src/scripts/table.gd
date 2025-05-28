@@ -254,6 +254,8 @@ func roll_points():
 
 func on_roll_completed(results):
 	points_service.add_all_points(results[0], results[1], results[2]);
+	
+	canvas_layer.set_points(points_service.get_all_points())
 	draw_dices()
 
 # =====================================================================

@@ -51,11 +51,33 @@ script = ExtResource("4_pgie8")
 [node name="Enemies" type="Node2D" parent="TileMap/Units"]
 
 [node name="Camera2D" type="Camera2D" parent="."]
+visible = false
 position = Vector2(604, 490)
 script = ExtResource("5_emoct")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 script = ExtResource("6_y5f8p")
+
+[node name="center" type="CenterContainer" parent="CanvasLayer"]
+anchors_preset = -1
+anchor_left = 0.269
+anchor_right = 0.795
+anchor_bottom = 0.973
+offset_left = -308.888
+offset_top = 7.0
+offset_right = 12.16
+offset_bottom = -108.504
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="points" type="VBoxContainer" parent="CanvasLayer"]
+anchors_preset = -1
+anchor_top = 0.209
+anchor_bottom = 0.209
+offset_left = 42.0
+offset_top = -14.432
+offset_right = 82.0
+offset_bottom = 25.568
 
 [node name="Select_arrow" parent="." instance=ExtResource("5_6l2al")]
 visible = false

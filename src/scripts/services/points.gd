@@ -21,6 +21,9 @@ var points = {
 	}
 }
 
+func get_all_points():
+	return points;
+
 func get_points(point_type: Points) -> int:
 	return points[point_type]["value"]
 
