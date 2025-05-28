@@ -20,12 +20,15 @@ func set_points(points: Dictionary):
 		points_container.add_child(label);
 		points_display.add_child(points_container);
 
-func change_point(point_type, modifier):
+func change_point(point_type, new_value):
 	var points_container = points_display.get_node(point_type);
+	
+	if(points_container == null):
+		return;
+	
 	var label : Label = points_container.get_child(0)
 	
 	var values = label.text.split("/")
-	var new_value = float(values[0]) + modifier
 	
 	label.text = str(new_value) + "/" + str(values[1])
 
@@ -38,18 +41,18 @@ func roll_dices(on_roll_completed):
 	roll_controller.roll(on_roll_completed)
 
 #To - Do WRITE THE DICE LOGIC UPSTAIR
-func display_dices_menu(dices, on_selected):
+func display_dices_menu(dices, summon_points, on_selected):
 	var menu = load("res://src/scenes/UI/menu.tscn").instantiate()
 	
-	menu.init(dices.map(func (dice): return dice_to_option(dice, on_selected)))
+	menu.init(dices.map(func (dice): return dice_to_option(dice, summon_points, on_selected)))
 	center.add_child(menu)
 
-func dice_to_option(dice, on_selected: Callable):
+func dice_to_option(dice, summon_points, on_selected: Callable):
 	return {
 		"label": dice["label"],
 		"subtitle": "⚡" + " " + str(dice["cost"]),
 		"icon": dice["icon"],
-		"selectable": true,
+		"selectable": dice["cost"] < summon_points,
 		"action": func(): on_selected.call(dice),
 	}
 

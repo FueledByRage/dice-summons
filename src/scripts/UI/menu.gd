@@ -27,10 +27,14 @@ func _input(event: InputEvent) -> void:
 	elif event.is_action_released("move_left"):
 		handle_option_change(-1)
 	elif event.is_action_released("confirm"):
+		var selected_option = options_container.get_children()[current_option]
+		
+		if(!selected_option.option["selectable"]):
+			return
+		
 		input_active = false
 		set_process_input(false)
 		
-		var selected_option = options_container.get_children()[current_option]
 		selected_option.action.call()
 		queue_free()
 
@@ -50,12 +54,11 @@ func handle_option_change(modifier):
 func init(options):
 	var options_container = $options_wrapper/options;
 	for option in options:
-		if(option["selectable"]):
-			var option_box = load("res://src/scenes/UI/option_box.tscn").instantiate()
+		var option_box = load("res://src/scenes/UI/option_box.tscn").instantiate()
 			
-			option_box.init(option)
+		option_box.init(option)
 			
-			options_container.add_child(option_box)
+		options_container.add_child(option_box)
 	
 	
 	maximum_options = options_container.get_child_count() - 1

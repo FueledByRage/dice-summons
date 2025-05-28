@@ -35,7 +35,11 @@ var dice_on_hand
 # =====================================================================
 
 func _ready() -> void:
+	_set_up()
 	_to_roll()
+
+func _set_up():
+	points_service.points_changed.connect(canvas_layer.change_point)
 
 # =====================================================================
 # === ENTRADA DO USUÁRIO (INPUT) =====================================
@@ -159,10 +163,12 @@ func _to_idle():
 
 func to_placing():
 	state = States.PLACING
-	table.placing(_to_idle)
-	
+	table.placing(dice_placed)
+
+func dice_placed():
 	points_service.remove_points(Points.SUMMON_POINTS, dice_on_hand["cost"])
-	canvas_layer.change_point("SUMMON_POINTS", -dice_on_hand["cost"])
+	
+	_to_idle()
 
 # =====================================================================
 # === FLUXO DE ATAQUE / FEITIÇO ======================================
@@ -243,7 +249,9 @@ func move_summon(selected_position_data):
 func draw_dices():
 	dices_on_hand = dices_module.draw_dices(3);
 	
-	canvas_layer.display_dices_menu(dices_on_hand, on_dice_selected);
+	var summon_points = points_service.get_points(Points.SUMMON_POINTS);
+	
+	canvas_layer.display_dices_menu(dices_on_hand, summon_points, on_dice_selected);
 
 func on_dice_selected(selected_dice):
 	var no_selected_dices = dices_on_hand.filter(func(dice): return dice['id'] != selected_dice['id'])
