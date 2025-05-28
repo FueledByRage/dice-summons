@@ -122,15 +122,17 @@ func _to_roll():
 func _to_draw_phase():
 	state = States.DRAW_PHASE
 
-
 func _to_idle():
 	targets.clear()
 	select_target_index = 0
 	state = States.IDLE
 	
+	show_idle_menu()
+
+func show_idle_menu():
 	var has_units = units.has_units()
 	var has_summon_points = points_service.get_points(Points.SUMMON_POINTS) > 0;
-	
+
 	var options = [
 		{
 			"label": "Attack",
@@ -160,6 +162,21 @@ func _to_idle():
 	]
 	
 	canvas_layer.show_menu(options)
+
+func display_dices_menu(dices, summon_points, on_selected):
+	var menu = load("res://src/scenes/UI/menu.tscn").instantiate()
+	var dice_options = dices.map(func (dice): return dice_to_option(dice, summon_points, on_selected))
+	
+	canvas_layer.show_menu(dice_options)
+
+func dice_to_option(dice, summon_points, on_selected):
+	return {
+		"label": dice["label"],
+		"subtitle": "⚡" + " " + str(dice["cost"]),
+		"icon": dice["icon"],
+		"selectable": dice["cost"] <= summon_points,
+		"action": func(): on_selected.call(dice),
+	}
 
 func to_placing():
 	state = States.PLACING
@@ -251,7 +268,7 @@ func draw_dices():
 	
 	var summon_points = points_service.get_points(Points.SUMMON_POINTS);
 	
-	canvas_layer.display_dices_menu(dices_on_hand, summon_points, on_dice_selected);
+	display_dices_menu(dices_on_hand, summon_points, on_dice_selected);
 
 func on_dice_selected(selected_dice):
 	var no_selected_dices = dices_on_hand.filter(func(dice): return dice['id'] != selected_dice['id'])
