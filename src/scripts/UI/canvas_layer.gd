@@ -1,17 +1,33 @@
 extends CanvasLayer
 
+@onready var points_types = get_parent().Points;
 @onready var center = $center;
 @onready var points_display = $points;
 
 func set_points(points: Dictionary):
-	for point in points.values():
+	var keys = points.keys();
+	for key in keys:
+		var points_container = VBoxContainer.new()
+		points_container.name = points_types.keys()[key];
+		
+		var point = points[key].value;
+		var maximum_point = points[key].maximum;
+		
 		var label = Label.new()
-		
 		label.add_theme_font_size_override("font_size", 40)
+		label.text = str(point) + "/" + str(maximum_point);
 		
-		label.text = str(point.value);
-		
-		points_display.add_child(label);
+		points_container.add_child(label);
+		points_display.add_child(points_container);
+
+func change_point(point_type, modifier):
+	var points_container = points_display.get_node(point_type);
+	var label : Label = points_container.get_child(0)
+	
+	var values = label.text.split("/")
+	var new_value = float(values[0]) + modifier
+	
+	label.text = str(new_value) + "/" + str(values[1])
 
 func roll_dices(on_roll_completed):
 	var roll_controller = load("res://src/scenes/roll_controller.tscn").instantiate()
@@ -21,6 +37,7 @@ func roll_dices(on_roll_completed):
 	
 	roll_controller.roll(on_roll_completed)
 
+#To - Do WRITE THE DICE LOGIC UPSTAIR
 func display_dices_menu(dices, on_selected):
 	var menu = load("res://src/scenes/UI/menu.tscn").instantiate()
 	

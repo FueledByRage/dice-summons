@@ -6,6 +6,12 @@ signal target_selected
 # === Constantes e Enums ===
 enum States { ROLLING, DRAW_PHASE, SELECTING_SPELL, PLACING, IDLE, SELECTING, MOVING, ON_MOVING, CASTING_SPELL }
 
+enum Points {
+	SUMMON_POINTS,
+	MOVE_POINTS,
+	ENERGY_POINTS
+}
+
 # === Variáveis de Estado ===
 var state = States.IDLE
 var targets = []
@@ -22,7 +28,6 @@ var dice_on_hand
 @onready var dices_module = $dices_module
 @onready var camera = $Camera2D
 @onready var points_service = $points_service
-@onready var points_enum = points_service.Points
 @onready var canvas_layer = $CanvasLayer
 
 # =====================================================================
@@ -120,7 +125,7 @@ func _to_idle():
 	state = States.IDLE
 	
 	var has_units = units.has_units()
-	var has_summon_points = points_service.get_points(points_enum.SUMMON_POINTS) > 0;
+	var has_summon_points = points_service.get_points(Points.SUMMON_POINTS) > 0;
 	
 	var options = [
 		{
@@ -155,7 +160,9 @@ func _to_idle():
 func to_placing():
 	state = States.PLACING
 	table.placing(_to_idle)
-	points_service.remove_points(points_enum.SUMMON_POINTS, dice_on_hand["cost"])
+	
+	points_service.remove_points(Points.SUMMON_POINTS, dice_on_hand["cost"])
+	canvas_layer.change_point("SUMMON_POINTS", -dice_on_hand["cost"])
 
 # =====================================================================
 # === FLUXO DE ATAQUE / FEITIÇO ======================================
@@ -212,7 +219,7 @@ func to_moving():
 
 func _to_on_moving(selected_summon):
 	summon_on_move = selected_summon.value
-	var points_move = points_service.get_points(points_enum.MOVE_POINTS)
+	var points_move = points_service.get_points(Points.MOVE_POINTS)
 	targets = table.on_possible_moves(selected_summon, points_move).map(_position_to_option)
 	
 	display_target_on_focus()
@@ -226,7 +233,7 @@ func move_summon(selected_position_data):
 	table.reset_possible_moves()
 	select_arrow.visible = false
 	summon_on_move = null
-	points_service.remove_points(points_enum.MOVE_POINTS, dice_on_hand["cost"])
+	points_service.remove_points(Points.MOVE_POINTS, dice_on_hand["cost"])
 	_to_idle()
 
 # =====================================================================
