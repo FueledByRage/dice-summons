@@ -1,5 +1,5 @@
 
-# 🎲 Dice Summons - Game Design Document (GDD)
+# 🎲 Dice Summons
 
 > ⚠️ **Atenção:** Este projeto está em **desenvolvimento ativo**. As mecânicas, regras e sistemas descritos neste documento estão sujeitos a alterações, ajustes e melhorias ao longo do processo.
 
