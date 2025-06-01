@@ -1,10 +1,12 @@
 extends Node2D
 
+class_name Table
+
 # === Sinais ===
 signal target_selected
 
 # === Constantes e Enums ===
-enum States { ROLLING, DRAW_PHASE, SELECTING_SPELL, PLACING, IDLE, SELECTING, MOVING, ON_MOVING, CASTING_SPELL }
+enum States { ROLLING, DRAW_PHASE, SELECTING, PLACING, IDLE }
 
 enum Points {
 	SUMMON_POINTS,
@@ -22,7 +24,7 @@ var dices_on_hand = []
 var dice_on_hand
 
 # === Referências para Nós ===
-@onready var table = $TileMap
+@onready var board = $TileMap
 @onready var units = $TileMap/Units
 @onready var select_arrow = $Select_arrow
 @onready var dices_module = $dices_module
@@ -52,15 +54,10 @@ func _input(event: InputEvent) -> void:
 				to_selecting_attacking_summon()
 			elif event.is_action_released("move"):
 				to_moving()
-			elif event.is_action_pressed("placing"):
-				to_placing()
 
-		States.SELECTING_SPELL:
-			if event.is_action_released("confirm"):
-				_on_confirm()
+		States.SELECTING:
+			handle_selecting_options(event)
 
-	if state in [States.SELECTING, States.MOVING, States.ON_MOVING, States.CASTING_SPELL]:
-		handle_selecting_options(event)
 
 # =====================================================================
 # === LÓGICA DE SELEÇÃO ===============================================
@@ -180,7 +177,7 @@ func dice_to_option(dice, summon_points, on_selected):
 
 func to_placing():
 	state = States.PLACING
-	table.placing(dice_placed)
+	board.placing(dice_placed)
 
 func dice_placed():
 	points_service.remove_points(Points.SUMMON_POINTS, dice_on_hand["cost"])
@@ -192,31 +189,32 @@ func dice_placed():
 # =====================================================================
 
 func to_selecting_attacking_summon():
-	var allies_units_options = table.get_allies_units().map(_unit_to_option)
+	var allies_units_options = board.get_allies_units().map(_unit_to_option)
 	if allies_units_options.size() > 0:
 		targets = allies_units_options
+		state = States.SELECTING
 		target_selected.connect(_to_selecting_spell, CONNECT_ONE_SHOT)
 		state = States.SELECTING
 		display_target_on_focus()
 
 func _to_selecting_spell(selected):
 	display_summon_options(selected.value)
-	state = States.SELECTING_SPELL
+	state = States.SELECTING
 	target_selected.connect(_to_casting_spell, CONNECT_ONE_SHOT)
 
 func _to_casting_spell():
+	state = States.SELECTING
 	target_selected.connect(execute_spell, CONNECT_ONE_SHOT)
-	state = States.CASTING_SPELL
 	display_target_on_focus()
 
 func cast(spell):
 	casted_spell = spell
 	if spell.target_type == "all":
-		targets = table.get_all_units().map(_unit_to_option)
+		targets = board.get_all_units().map(_unit_to_option)
 	elif spell.target_type == "allies":
-		targets = table.get_allies_units().map(_unit_to_option)
+		targets = board.get_allies_units().map(_unit_to_option)
 	elif spell.target_type == "enemies":
-		targets = table.get_enemies().map(_unit_to_option)
+		targets = board.get_enemies().map(_unit_to_option)
 	elif spell.target_type == "own":
 		#execute_spell()
 		pass
@@ -235,25 +233,25 @@ func execute_spell(target):
 # =====================================================================
 
 func to_moving():
-	targets = table.get_allies().map(_unit_to_option)
+	targets = board.get_allies().map(_unit_to_option)
+	state = States.SELECTING
 	target_selected.connect(_to_on_moving, CONNECT_ONE_SHOT)
 	display_target_on_focus()
-	state = States.MOVING
 
 func _to_on_moving(selected_summon):
 	summon_on_move = selected_summon.value
 	var points_move = points_service.get_points(Points.MOVE_POINTS)
-	targets = table.on_possible_moves(selected_summon, points_move).map(_position_to_option)
+	targets = board.on_possible_moves(selected_summon, points_move).map(_position_to_option)
 	
 	display_target_on_focus()
 	
+	state = States.SELECTING
 	target_selected.connect(move_summon, CONNECT_ONE_SHOT)
-	state = States.ON_MOVING
 
 func move_summon(selected_position_data):
 	summon_on_move.global_position = selected_position_data.position
 	
-	table.reset_possible_moves()
+	board.reset_possible_moves()
 	select_arrow.visible = false
 	summon_on_move = null
 	points_service.remove_points(Points.MOVE_POINTS, dice_on_hand["cost"])
@@ -295,6 +293,8 @@ func on_roll_completed(results):
 # =====================================================================
 
 func display_target_on_focus():
+	if(targets.size() == 0):
+		return
 	var on_focus_position = to_local(get_selected_option().position)
 	var on_focus_position_arrow_position = on_focus_position + Vector2(0, -15)
 	
@@ -307,4 +307,4 @@ func move_arrow_to_on_focus():
 	select_arrow.move_to(on_focus_position_arrow_position)
 
 func display_summon_options(summon):
-	canvas_layer.show_options("Spells", summon.SPELLS, cast)
+	canvas_layer.show_options("Spells " + " " + summon.name, summon.SPELLS, cast)

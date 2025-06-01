@@ -1,5 +1,7 @@
 extends TileMapLayer
 
+class_name Board
+
 var WIDTH = 12
 var HEIGHT = 20
 
@@ -7,6 +9,8 @@ signal dice_placed;
 
 @onready var units = $Units;
 @onready var stage = get_parent();
+
+var dice_limit = 5;
 
 var maped_table: Dictionary = {}
 var path = []
@@ -24,29 +28,35 @@ var selected_form_index = 0;
 var prev_selected_form_index = 0;
 
 var FORMS = [
-	[
-		Vector2(0,0),
-		Vector2(0, -1),
-		Vector2(0, -2),
-		Vector2(-1,0),
-		Vector2(1,0),
-		Vector2(0, 1)
-	],
-	[
-		Vector2(0,0),
-		Vector2(0,1),
-		Vector2(0,2),
-		Vector2(1,0),
-		Vector2(-1,0),
-		Vector2(0,-1)
-	]
+	{
+		"height": 3,
+		"form": [
+			Vector2(0,0),
+			Vector2(0, -1),
+			Vector2(0, -2),
+			Vector2(-1,0),
+			Vector2(1,0),
+			Vector2(0, 1)
+		]
+	},
+	{
+		"height": 3,
+		"form": [
+			Vector2(0,0),
+			Vector2(0,1),
+			Vector2(0,2),
+			Vector2(1,0),
+			Vector2(-1,0),
+			Vector2(0,-1)
+		]
+	}
 ]
 
 func _ready() -> void:
-	add_to_group("table")
-	set_table()
+	add_to_group("board")
+	set_board()
 
-func set_table() -> void:
+func set_board() -> void:
 	for column in range(WIDTH):
 		for row in range(HEIGHT):
 			if _is_within_bounds(Vector2i(column, row)):
@@ -68,9 +78,10 @@ func _process(_delta: float) -> void:
 				
 			var place_cell = Vector2i(1,0);
 			
-			for cell_form in selected_form:
+			for cell_form in selected_form["form"]:
 				var cell_coord = local_to_map(to_local(center_tile) + (cell_form * 32))
-				if(_is_within_bounds(cell_coord)):
+				
+				if(_is_within_play_bounds(cell_coord)):
 					prev_selected_tile = center_tile;
 					prev_selected_form_index = selected_form_index
 					select_dice_cells.push_back(cell_coord)
@@ -82,36 +93,46 @@ func _process(_delta: float) -> void:
 				selected_form_index = 0;
 			else:
 				selected_form_index += 1
+
 		if(Input.is_action_pressed("move_left")):
 			prev_selected_form_index = selected_form_index
 			if(selected_form_index == 0):
 				selected_form_index = (FORMS.size() - 1);
 			else:
 				selected_form_index -= 1;
+
 		if(Input.is_action_just_pressed("confirm")):
+			var form = selected_form["form"].map(func(cell_form):  return local_to_map(to_local(get_selected_tile()) + (cell_form * 32)))
+
+			if(!form.all(_is_within_play_bounds)):
+				return
+			
+			dice_limit += selected_form["height"]
+			
 			var selected_dice = stage.get_dice_on_hand()
 			
-			place(selected_dice, selected_form);
-			dice_placed.emit();
+			place(selected_dice, form);
 			
 			select_dice_cells.clear();
 			is_placing = false;
 			prev_selected_tile = null;
+			
+			dice_placed.emit();
 
-func place(selected_dice, dice_form):
+
+func place(selected_dice, form):
 	var selected_tile = get_selected_tile();
 	var dice_scene = preload("res://src/scenes/dice.tscn")
 	
-	build_dice(selected_tile, dice_form)
+	build_dice(selected_tile, form)
 	summon(selected_dice, selected_tile)
 
 func build_dice(dice_center, form):
 	var dice_face = Vector2i(1,1)
 
 	for cell_form in form:
-		var cell_coord = local_to_map(to_local(dice_center) + (cell_form * 32))
-		path.push_back(cell_coord)
-		set_cell(cell_coord, 0, dice_face, 0)
+		path.push_back(cell_form)
+		set_cell(cell_form, 0, dice_face, 0)
 
 func summon(dice, summon_target_position):
 	var summon_scene = preload("res://src/scenes/summon.tscn")
@@ -121,6 +142,8 @@ func summon(dice, summon_target_position):
 	
 	units.add_ally(summon_instance, summon_target_position)
 	add_child(summon_instance)
+	
+	return summon_instance;
 
 func on_possible_moves(tile, move):
 	var possible_moves = _calculate_possible_moves(to_local(tile.position), move);
@@ -202,5 +225,8 @@ func _possible_moves_to_global(possible_moves):
 		"distance": possible_moves["distance"]
 	}
 
+func _is_within_play_bounds(tile):
+	return _is_within_bounds(tile) and tile.y > (HEIGHT - dice_limit); 
+
 func _is_within_bounds(tile: Vector2i) -> bool:
-	return tile.x >= 0 and tile.x < WIDTH and tile.y >= 0 and tile.y < HEIGHT
+	return tile.x >= 0 and tile.x < WIDTH and tile.y >= 0 and tile.y < HEIGHT;

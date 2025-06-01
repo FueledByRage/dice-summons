@@ -32,6 +32,7 @@ func change_point(point_type, new_value):
 	
 	label.text = str(new_value) + "/" + str(values[1])
 
+# To Do remove it to a new service or component
 func roll_dices(on_roll_completed):
 	var roll_controller = load("res://src/scenes/roll_controller.tscn").instantiate()
 	
@@ -39,22 +40,6 @@ func roll_dices(on_roll_completed):
 	center.add_child(roll_controller)
 	
 	roll_controller.roll(on_roll_completed)
-
-#To - Do WRITE THE DICE LOGIC UPSTAIR
-#func display_dices_menu(dices, summon_points, on_selected):
-	#var menu = load("res://src/scenes/UI/menu.tscn").instantiate()
-	#
-	#menu.init(dices.map(func (dice): return dice_to_option(dice, summon_points, on_selected)))
-	#center.add_child(menu)
-#
-#func dice_to_option(dice, summon_points, on_selected: Callable):
-	#return {
-		#"label": dice["label"],
-		#"subtitle": "⚡" + " " + str(dice["cost"]),
-		#"icon": dice["icon"],
-		#"selectable": dice["cost"] <= summon_points,
-		#"action": func(): on_selected.call(dice),
-	#}
 
 func show_options(menu_title, options, on_selected):
 	var menu = preload("res://src/scenes/menu.tscn").instantiate()
