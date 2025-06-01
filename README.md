@@ -1,4 +1,3 @@
----
 
 # 🎲 Dice Summons - Game Design Document (GDD)
 
@@ -134,5 +133,3 @@ Cada criatura possui:
 Este documento representa a visão atual do projeto e serve como referência para seu desenvolvimento. Todos os elementos aqui descritos podem ser modificados, ajustados ou expandidos conforme o projeto evolui.
 
 ---
-
-Se quiser, posso gerar o arquivo `.md` com essa versão. Deseja?
