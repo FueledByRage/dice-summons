@@ -1,0 +1,53 @@
+[gd_scene load_steps=2 format=3 uid="uid://ct4x3n0nunyrn"]
+
+[ext_resource type="Script" path="res://src/scripts/stages/login.gd" id="1_j8kac"]
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_j8kac")
+
+[node name="HTTPRequest" type="HTTPRequest" parent="."]
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.111
+anchor_top = 0.129
+anchor_right = 0.897
+anchor_bottom = 0.913
+offset_left = -127.872
+offset_top = -83.592
+offset_right = 120.656
+offset_bottom = 59.376
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/MarginContainer"]
+layout_mode = 2
+
+[node name="username" type="LineEdit" parent="CenterContainer/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+placeholder_text = "Username"
+alignment = 1
+
+[node name="password" type="LineEdit" parent="CenterContainer/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+placeholder_text = "Password"
+alignment = 1
+secret = true
+
+[node name="Button" type="Button" parent="CenterContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Login"
+
+[node name="feedback_label" type="Label" parent="CenterContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2

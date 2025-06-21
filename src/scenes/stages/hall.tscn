@@ -1,0 +1,29 @@
+[gd_scene load_steps=2 format=3 uid="uid://o4x1njm2cayq"]
+
+[ext_resource type="Script" path="res://src/scripts/stages/hall.gd" id="1_g2l8t"]
+
+[node name="Hall" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_g2l8t")
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 0
+offset_right = 1154.0
+offset_bottom = 652.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
+layout_mode = 2
+
+[node name="username" type="LineEdit" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+placeholder_text = "Username"
+alignment = 1
+
+[node name="send" type="Button" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+text = "Enviar convite"

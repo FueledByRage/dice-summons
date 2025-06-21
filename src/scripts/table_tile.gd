@@ -12,6 +12,11 @@ signal dice_placed;
 
 var dice_limit = 5;
 
+enum Dice_Owners{
+	ENEMY,
+	PLAYER
+}
+
 var maped_table: Dictionary = {}
 var path = []
 var summons_map = []
@@ -109,9 +114,16 @@ func _process(_delta: float) -> void:
 			
 			dice_limit += selected_form["height"]
 			
-			var selected_dice = stage.get_dice_on_hand()
+			var dice_on_hand = stage.get_dice_on_hand()
+			var selected_tile = get_selected_tile();
 			
-			place(selected_dice, form);
+			place({
+				"dice": dice_on_hand.data,
+				"form": form,
+				"owner": dice_on_hand.owner,
+				},
+				selected_tile
+			);
 			
 			select_dice_cells.clear();
 			is_placing = false;
@@ -119,17 +131,25 @@ func _process(_delta: float) -> void:
 			
 			dice_placed.emit();
 
+func place_enemy(enemy_dice, selected_tile):
+	place(
+		{
+			"dice": enemy_dice.data,
+			"form": enemy_dice.form,
+			"owner": Dice_Owners.ENEMY,
+		},
+		selected_tile
+	)
 
-func place(selected_dice, form):
-	var selected_tile = get_selected_tile();
+func place(selected, selected_tile):
 	var dice_scene = preload("res://src/scenes/dice.tscn")
 	
-	build_dice(selected_tile, form)
-	summon(selected_dice, selected_tile)
+	build_dice(selected_tile, selected.form, selected.owner)
+	summon(selected.dice, selected_tile)
 
-func build_dice(dice_center, form):
-	var dice_face = Vector2i(1,1)
-
+func build_dice(dice_center, form, owner):
+	var dice_face =  Vector2i(1,1) if owner == Dice_Owners.PLAYER else Vector2i(1,0)
+	
 	for cell_form in form:
 		path.push_back(cell_form)
 		set_cell(cell_form, 0, dice_face, 0)

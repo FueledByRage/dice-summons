@@ -2,6 +2,8 @@ extends Node2D
 
 class_name Table
 
+var is_placing_enemy = false;
+
 # === Sinais ===
 signal target_selected
 
@@ -54,14 +56,13 @@ func _input(event: InputEvent) -> void:
 				to_selecting_attacking_summon()
 			elif event.is_action_released("move"):
 				to_moving()
+			elif event.is_action_released("place_enemy"):
+				to_moving()
+				is_placing_enemy = true;
+				pass
 
 		States.SELECTING:
 			handle_selecting_options(event)
-
-
-# =====================================================================
-# === LÓGICA DE SELEÇÃO ===============================================
-# =====================================================================
 
 func handle_selecting_options(event):
 	if event.is_action_released("move_right"):
@@ -154,11 +155,21 @@ func show_idle_menu():
 			"icon": "res://icon.svg",
 			"selectable": true,
 			"action": _to_roll
-			
+		},
+		{
+			"label": "Place enemy",
+			"icon": "res://icon.svg",
+			"selectable": true,
+			"action": placing_enemy
 		}
 	]
 	
 	canvas_layer.show_menu(options)
+
+func placing_enemy():
+	to_placing()
+	is_placing_enemy = true
+
 
 func display_dices_menu(dices, summon_points, on_selected):
 	var menu = load("res://src/scenes/UI/menu.tscn").instantiate()
@@ -241,6 +252,7 @@ func to_moving():
 func _to_on_moving(selected_summon):
 	summon_on_move = selected_summon.value
 	var points_move = points_service.get_points(Points.MOVE_POINTS)
+	
 	targets = board.on_possible_moves(selected_summon, points_move).map(_position_to_option)
 	
 	display_target_on_focus()
@@ -277,7 +289,13 @@ func on_dice_selected(selected_dice):
 	_to_idle();
 
 func get_dice_on_hand():
-	return dice_on_hand
+	var owner = board.Dice_Owners.ENEMY if is_placing_enemy else board.Dice_Owners.PLAYER;
+	is_placing_enemy = false;
+	
+	return {
+		"data": dice_on_hand,
+		"owner": owner
+	}
 
 func roll_points():
 	canvas_layer.roll_dices(on_roll_completed)
@@ -295,7 +313,10 @@ func on_roll_completed(results):
 func display_target_on_focus():
 	if(targets.size() == 0):
 		return
-	var on_focus_position = to_local(get_selected_option().position)
+	
+	var target_on_focus = get_selected_option()
+	
+	var on_focus_position = to_local(target_on_focus['position'])
 	var on_focus_position_arrow_position = on_focus_position + Vector2(0, -15)
 	
 	select_arrow.move_to(on_focus_position_arrow_position)

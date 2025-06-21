@@ -1,0 +1,33 @@
+[gd_scene load_steps=2 format=3 uid="uid://cx10by1vn7fnm"]
+
+[ext_resource type="Script" path="res://src/scripts/UI/pop_up.gd" id="1_qaib0"]
+
+[node name="PopUp" type="MarginContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_qaib0")
+
+[node name="background_texture" type="NinePatchRect" parent="."]
+layout_mode = 2
+
+[node name="label_margin" type="MarginContainer" parent="background_texture"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="content" type="VBoxContainer" parent="background_texture/label_margin"]
+layout_mode = 2
+
+[node name="text" type="Label" parent="background_texture/label_margin/content"]
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="buttons" type="HBoxContainer" parent="background_texture/label_margin/content"]
+layout_mode = 2
