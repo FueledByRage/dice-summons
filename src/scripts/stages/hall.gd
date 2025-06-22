@@ -6,13 +6,17 @@ var socket := WebSocketPeer.new()
 var user_label : Label;
 
 func _ready():
+	var username = UserSession.username
 	send_button = $VBoxContainer/CenterContainer/VBoxContainer/send
 	send_button.pressed.connect(send_invite)
 	
 	user_label = $VBoxContainer/MarginContainer/HBoxContainer/user_label;
 	user_label.text = 'User ' + ' ' + UserSession.username
 	
-	var err = socket.connect_to_url("ws://localhost:4000/ws")
+	var ws_url = "ws://localhost:4000/ws?username=%s" % username
+	print(ws_url)
+	var err = socket.connect_to_url(ws_url)
+
 	if err != OK:
 		print("Erro ao conectar WebSocket: ", err)
 	else:
@@ -22,11 +26,12 @@ func _ready():
 func _process(_delta):
 	socket.poll()
 	var state = socket.get_ready_state()
-
+	
 	match state:
 		WebSocketPeer.STATE_OPEN:
 			while socket.get_available_packet_count() > 0:
 				var raw_msg = socket.get_packet().get_string_from_utf8()
+				print("RECEBIDO:", raw_msg)
 				var json_result = JSON.parse_string(raw_msg)
 
 				if typeof(json_result) == TYPE_DICTIONARY:
@@ -42,11 +47,13 @@ func _process(_delta):
 			set_process(false)
 
 func handle_message(msg: Dictionary) -> void:
-	var pop_up = load("res://src/scenes/UI/pop_up.tscn")
+	var pop_up = load("res://src/scenes/UI/pop_up.tscn").instantiate()
+	
 	match msg.get("type", ""):
 		"invite":
-			var options = [{
-				"message": "Você recebeu uma nova mensagem",
+			var from_user = msg.get("from")
+			var config = {
+				"message": "Você recebeu um convite para jogar de %s" %from_user,
 				"options": [
 					{
 						"text": "Okay",
@@ -57,12 +64,11 @@ func handle_message(msg: Dictionary) -> void:
 						"action": func() : print("not okay")
 					}
 				]
-			}]
+			}
 			
-			var from_user = msg.get("from")
-			pop_up.init(options)
-			
+			pop_up.init(config)
 			add_child(pop_up)
+			
 		"invite_response":
 			print("📩 Resposta de ", msg.get("from"), ": ", msg.get("status"))
 		_:
