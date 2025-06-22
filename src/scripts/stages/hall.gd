@@ -1,13 +1,16 @@
 extends Node
 
 var socket := WebSocketPeer.new()
-@onready var username_input : LineEdit = $CenterContainer/VBoxContainer/username
+@onready var username_input : LineEdit = $VBoxContainer/CenterContainer/VBoxContainer/username
 @onready var send_button : Button;
+var user_label : Label;
 
 func _ready():
-	send_button = $CenterContainer/VBoxContainer/send
-	
+	send_button = $VBoxContainer/CenterContainer/VBoxContainer/send
 	send_button.pressed.connect(send_invite)
+	
+	user_label = $VBoxContainer/MarginContainer/HBoxContainer/user_label;
+	user_label.text = 'User ' + ' ' + UserSession.username
 	
 	var err = socket.connect_to_url("ws://localhost:4000/ws")
 	if err != OK:
