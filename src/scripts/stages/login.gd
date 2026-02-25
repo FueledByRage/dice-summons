@@ -36,9 +36,8 @@ func _on_login(result: int, response_code: int, headers: PackedStringArray, body
 	var json_text := body.get_string_from_utf8()
 	var data = JSON.parse_string(json_text)
 
-	if typeof(data) == TYPE_DICTIONARY and data.has("user"):
-		var username = data["user"].get("username", "")
-		UserSession.login(username)
+	if typeof(data) == TYPE_DICTIONARY and data.has("session"):
+		UserSession.login(data)
 		get_tree().change_scene_to_file("res://src/scenes/stages/hall.tscn")
 	else:
 		feedback_label.text = "Erro ao processar resposta do servidor"

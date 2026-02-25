@@ -118,7 +118,7 @@ func _process(_delta: float) -> void:
 			var selected_tile = get_selected_tile();
 			
 			place({
-				"dice": dice_on_hand.data,
+				"data": dice_on_hand.data,
 				"form": form,
 				"owner": dice_on_hand.owner,
 				},
@@ -129,7 +129,13 @@ func _process(_delta: float) -> void:
 			is_placing = false;
 			prev_selected_tile = null;
 			
-			dice_placed.emit();
+			dice_placed.emit({
+					"data": dice_on_hand.data,
+					"form": form,
+					"owner": dice_on_hand.owner,
+				},
+				selected_tile
+			);
 
 func place_enemy(enemy_dice, selected_tile):
 	place(
@@ -141,11 +147,11 @@ func place_enemy(enemy_dice, selected_tile):
 		selected_tile
 	)
 
-func place(selected, selected_tile):
+func place(selected_dice, selected_tile):
 	var dice_scene = preload("res://src/scenes/dice.tscn")
 	
-	build_dice(selected_tile, selected.form, selected.owner)
-	summon(selected.dice, selected_tile)
+	build_dice(selected_tile, selected_dice.form, selected_dice.owner)
+	summon(selected_dice.data, selected_tile)
 
 func build_dice(dice_center, form, owner):
 	var dice_face =  Vector2i(1,1) if owner == Dice_Owners.PLAYER else Vector2i(1,0)

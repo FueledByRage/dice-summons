@@ -58,6 +58,16 @@ script = ExtResource("5_emoct")
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 script = ExtResource("6_y5f8p")
 
+[node name="HUD" type="MarginContainer" parent="CanvasLayer"]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="user_info" type="HBoxContainer" parent="CanvasLayer/HUD"]
+layout_mode = 2
+
+[node name="username" type="Label" parent="CanvasLayer/HUD/user_info"]
+layout_mode = 2
+
 [node name="center" type="CenterContainer" parent="CanvasLayer"]
 anchors_preset = -1
 anchor_left = 0.269

@@ -14,4 +14,5 @@ func init(config):
 		
 		button.text = option['text']
 		button.pressed.connect(option['action'])
+		button.pressed.connect(queue_free)
 		buttons_container.add_child(button)

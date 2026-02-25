@@ -1,10 +1,12 @@
 extends Node
 
 var username: String = ""
+var token : String
 var is_logged_in: bool = false
 
-func login(name: String):
-	username = name
+func login(data: Dictionary):
+	username = data.get("username", "?")
+	token = data.get("session", "?")
 	is_logged_in = true
 
 func logout():

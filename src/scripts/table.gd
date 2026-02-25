@@ -33,6 +33,9 @@ var dice_on_hand
 @onready var camera = $Camera2D
 @onready var points_service = $points_service
 @onready var canvas_layer = $CanvasLayer
+@onready var username = UserSession.username
+
+var socket : WebSocket
 
 # =====================================================================
 # === INICIALIZAÇÃO ==================================================
@@ -41,10 +44,68 @@ var dice_on_hand
 func _ready() -> void:
 	_set_up()
 	_to_roll()
+	_setup_hud()
+
+func _setup_hud():
+	var username_label = $CanvasLayer/HUD/user_info/username;
+	username_label.text = "Username: " + UserSession.username
 
 func _set_up():
+	socket = WebSocket.new()
+	add_child(socket)
+	
 	points_service.points_changed.connect(canvas_layer.change_point)
+	
+	var ws_url = "ws://localhost:4000/ws"
+	
+	socket.config({
+		"url": ws_url,
+		"headers": {
+			"Authorization": UserSession.token
+		}
+	})
+	
+	socket.connected.connect(_enter_match)
+	socket.message_received.connect(_on_message_received)
+	
+	set_process(true)
 
+func _enter_match():
+		var msg := {
+			"type": "enter_match",
+		}
+		socket.send(JSON.stringify(msg))
+
+func _on_message_received(data: String):
+	print("📨 RECEBIDO:", data)
+	var json_result = JSON.parse_string(data)
+	if typeof(json_result) == TYPE_DICTIONARY:
+		handle_message(json_result)
+	else:
+		print("Mensagem inválida recebida: ", data)
+
+func handle_message(msg: Dictionary) -> void:
+	var pop_up = load("res://src/scenes/UI/pop_up.tscn").instantiate()
+	
+	match msg.get("type", ""):
+		"start_turn":
+			pass
+		"pass_turn":
+			pass
+		"enemy_summon":
+			pass
+		"enemy_cast_spell":
+			pass
+		"add_enemy_dice":
+			board.place_enemy();
+			pass
+		"invite_response":
+			print("📩 Resposta de ", msg.get("from"), ": ", msg.get("status"))
+		"start_match":
+			get_tree().change_scene_to_file("res://src/scenes/table.tscn")
+			pass
+		_:
+			print("❓ Mensagem desconhecida: ", msg)
 # =====================================================================
 # === ENTRADA DO USUÁRIO (INPUT) =====================================
 # =====================================================================
@@ -190,9 +251,16 @@ func to_placing():
 	state = States.PLACING
 	board.placing(dice_placed)
 
-func dice_placed():
+func dice_placed(dice, selected_tile):
 	points_service.remove_points(Points.SUMMON_POINTS, dice_on_hand["cost"])
 	
+	var dice_placed_message = {
+		"type": "add_dice",
+		"dice": dice,
+		"selected_tile": selected_tile,
+	}
+	
+	socket.emit(JSON.stringify(dice_placed_message))
 	_to_idle()
 
 # =====================================================================
